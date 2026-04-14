@@ -8,11 +8,13 @@ import { ActivityTrackingMap } from "@/src/components/maps/ActivityTrackingMap";
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
 import { useActivityStore } from "@/src/store/activity-store";
+import { useAppTheme } from "@/src/store/ui-store";
 import { calculateDistanceKm } from "@/src/utils/geo";
 
 import type { Coordinate } from "@/shared/types";
 
 export default function ActivityTrackingScreen() {
+  const { theme } = useAppTheme();
   const [isTracking, setIsTracking] = useState(false);
   const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
   const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
@@ -86,31 +88,60 @@ export default function ActivityTrackingScreen() {
   return (
     <Screen>
       <View className="flex-1 p-4">
-        <Text className="text-2xl font-bold text-white">Activity Tracking</Text>
-        <Text className="mt-1 text-sm text-[#8ea0b0]">
+        <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+          Activity Tracking
+        </Text>
+        <Text className="mt-1 text-sm" style={{ color: theme.textMuted }}>
           Start moving to draw your path in real time.
         </Text>
 
         <View className="mt-4 flex-row gap-3">
-          <View className="flex-1 rounded-xl border border-[#25313a] bg-[#12181d] p-3">
-            <Text className="text-xs uppercase tracking-wider text-[#7f8f9d]">
+          <View
+            className="flex-1 rounded-xl border p-3"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text
+              className="text-xs uppercase tracking-wider"
+              style={{ color: theme.textMuted }}
+            >
               Distance
             </Text>
-            <Text className="mt-2 text-xl font-bold text-[#38ff9c]">
+            <Text
+              className="mt-2 text-xl font-bold"
+              style={{ color: theme.accent }}
+            >
               {distanceKm.toFixed(2)} km
             </Text>
           </View>
-          <View className="flex-1 rounded-xl border border-[#25313a] bg-[#12181d] p-3">
-            <Text className="text-xs uppercase tracking-wider text-[#7f8f9d]">
+          <View
+            className="flex-1 rounded-xl border p-3"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text
+              className="text-xs uppercase tracking-wider"
+              style={{ color: theme.textMuted }}
+            >
               Points
             </Text>
-            <Text className="mt-2 text-xl font-bold text-[#ff8a33]">
+            <Text
+              className="mt-2 text-xl font-bold"
+              style={{ color: theme.text }}
+            >
               {coordinates.length}
             </Text>
           </View>
         </View>
 
-        <View className="mt-4 flex-1 overflow-hidden rounded-2xl border border-[#22303a]">
+        <View
+          className="mt-4 flex-1 overflow-hidden rounded-2xl border"
+          style={{ borderColor: theme.border }}
+        >
           <ActivityTrackingMap
             initialCoordinate={initialCoordinate}
             coordinates={coordinates}
@@ -122,9 +153,14 @@ export default function ActivityTrackingScreen() {
             <NeonButton
               label="Start Tracking"
               onPress={() => void startTracking()}
+              variant="primary"
             />
           ) : (
-            <NeonButton label="Stop & Review" onPress={stopTracking} />
+            <NeonButton
+              label="Stop & Review"
+              onPress={stopTracking}
+              variant="primary"
+            />
           )}
         </View>
       </View>

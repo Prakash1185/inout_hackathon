@@ -24,6 +24,19 @@ export interface EventSummary {
   isActive: boolean;
 }
 
+export interface MapOverviewResponse {
+  eventId: string;
+  userPolygons: Coordinate[][];
+  userCenters: Coordinate[];
+  othersPolygons: Coordinate[][];
+  othersCenters: Coordinate[];
+  stats: {
+    userCapturedArea: number;
+    othersCapturedArea: number;
+    othersCount: number;
+  };
+}
+
 export interface ActivityItem {
   id: string;
   userId: string;

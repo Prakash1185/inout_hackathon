@@ -1,20 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
+import { useAppTheme } from "@/src/store/ui-store";
+
 export default function TabsLayout() {
+  const { theme } = useAppTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#0f1215",
-          borderTopColor: "#1c252d",
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
           height: 64,
           paddingTop: 6,
           paddingBottom: 8,
         },
-        tabBarActiveTintColor: "#38ff9c",
-        tabBarInactiveTintColor: "#73808d",
+        tabBarActiveTintColor: theme.accent,
+        tabBarInactiveTintColor: theme.textMuted,
       }}
     >
       <Tabs.Screen
@@ -32,6 +36,15 @@ export default function TabsLayout() {
           title: "Rankings",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trophy" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: "Events",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar" color={color} size={size} />
           ),
         }}
       />

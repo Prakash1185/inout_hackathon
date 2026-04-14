@@ -11,15 +11,19 @@ import type { Coordinate } from "@/shared/types";
 interface HomeTerritoryMapProps {
   region: Region;
   currentLocation: Coordinate | null;
-  territoryPolygons: Coordinate[][];
-  territoryCenters: Coordinate[];
+  userPolygons: Coordinate[][];
+  userCenters: Coordinate[];
+  othersPolygons: Coordinate[][];
+  othersCenters: Coordinate[];
 }
 
 export function HomeTerritoryMap({
   region,
   currentLocation,
-  territoryPolygons,
-  territoryCenters,
+  userPolygons,
+  userCenters,
+  othersPolygons,
+  othersCenters,
 }: HomeTerritoryMapProps) {
   const mapType = Platform.OS === "ios" ? "mutedStandard" : "standard";
 
@@ -42,22 +46,40 @@ export function HomeTerritoryMap({
           pinColor="#38B6FF"
         />
       ) : null}
-      {territoryPolygons.map((polygon, index) => (
+      {othersPolygons.map((polygon, index) => (
         <Polygon
-          key={`polygon-${polygon[0]?.latitude}-${polygon[0]?.longitude}-${index}`}
+          key={`others-polygon-${polygon[0]?.latitude}-${polygon[0]?.longitude}-${index}`}
           coordinates={polygon}
           strokeWidth={2}
-          strokeColor="rgba(0,255,157,0.88)"
-          fillColor="rgba(0,255,157,0.2)"
+          strokeColor="rgba(87,130,217,0.65)"
+          fillColor="rgba(120,152,220,0.16)"
         />
       ))}
-      {territoryCenters.map((center, index) => (
+      {othersCenters.map((center, index) => (
         <Circle
-          key={`${center.latitude}-${center.longitude}-${index}`}
+          key={`others-center-${center.latitude}-${center.longitude}-${index}`}
+          center={center}
+          radius={52}
+          strokeColor="rgba(87,130,217,0.65)"
+          fillColor="rgba(120,152,220,0.14)"
+        />
+      ))}
+      {userPolygons.map((polygon, index) => (
+        <Polygon
+          key={`user-polygon-${polygon[0]?.latitude}-${polygon[0]?.longitude}-${index}`}
+          coordinates={polygon}
+          strokeWidth={2}
+          strokeColor="rgba(68,121,255,0.95)"
+          fillColor="rgba(68,121,255,0.32)"
+        />
+      ))}
+      {userCenters.map((center, index) => (
+        <Circle
+          key={`user-center-${center.latitude}-${center.longitude}-${index}`}
           center={center}
           radius={45}
-          strokeColor="rgba(0,255,157,0.8)"
-          fillColor="rgba(0,255,157,0.2)"
+          strokeColor="rgba(68,121,255,0.95)"
+          fillColor="rgba(68,121,255,0.35)"
         />
       ))}
     </MapView>

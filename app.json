@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "hackathon_app",
-    "slug": "hackathon_app",
+    "name": "Terranova",
+    "slug": "terranova",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "hackathonapp",
-    "userInterfaceStyle": "dark",
+    "scheme": "terranova",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "BitBox uses your location to track activities and map captured territory."
+        "NSLocationWhenInUseUsageDescription": "Terranova uses your location to track activities and map captured territory."
       }
     },
     "android": {
@@ -21,10 +21,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ],
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },

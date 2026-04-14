@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
+import { useAppTheme } from "@/src/store/ui-store";
+
 interface NeonButtonProps {
   label: string;
   onPress: () => void;
@@ -16,6 +18,7 @@ export function NeonButton({
   icon,
   variant = "primary",
 }: NeonButtonProps) {
+  const { theme } = useAppTheme();
   const primary = variant === "primary";
 
   return (
@@ -24,25 +27,25 @@ export function NeonButton({
       disabled={disabled}
       className="rounded-2xl"
       style={{
-        shadowColor: primary ? "#FF7A00" : "#00FF9D",
-        shadowOpacity: 0.35,
-        shadowRadius: 16,
+        shadowColor: theme.accent,
+        shadowOpacity: primary ? 0.28 : 0.12,
+        shadowRadius: 12,
         shadowOffset: { width: 0, height: 8 },
-        elevation: 8,
+        elevation: primary ? 8 : 2,
+        opacity: disabled ? 0.55 : 1,
       }}
     >
       <View
-        className={`flex-row items-center justify-center gap-2 rounded-2xl border px-5 py-4 ${
-          primary
-            ? "border-[#FFB347] bg-[#FF7A00]"
-            : "border-[#00FF9D] bg-[#121821]"
-        }`}
+        className="flex-row items-center justify-center gap-2 rounded-2xl border px-5 py-4"
+        style={{
+          borderColor: theme.border,
+          backgroundColor: primary ? theme.accent : theme.surface,
+        }}
       >
         {icon}
         <Text
-          className={`text-base font-semibold tracking-wide ${
-            primary ? "text-[#0B0F14]" : "text-[#E7FFF6]"
-          }`}
+          className="text-base font-semibold tracking-wide"
+          style={{ color: primary ? "#FFFFFF" : theme.text }}
         >
           {label}
         </Text>

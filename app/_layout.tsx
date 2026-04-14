@@ -18,7 +18,7 @@ export default function RootLayout() {
     return (
       <View className="flex-1 items-center justify-center bg-[#0B0F14] px-6">
         <Text className="text-center text-base text-white">
-          Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in .env
+          Missing authentication publishable key in .env
         </Text>
       </View>
     );

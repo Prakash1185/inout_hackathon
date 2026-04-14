@@ -3,8 +3,8 @@ import type { AuthTokenPayload } from "../types/auth";
 
 export async function getOrCreateUserFromAuth(authUser: AuthTokenPayload) {
   const safeEmail =
-    authUser.email?.trim() || `${authUser.clerkUserId}@clerk.local`;
-  const safeName = authUser.name?.trim() || "BitBox Athlete";
+    authUser.email?.trim() || `${authUser.clerkUserId}@auth.local`;
+  const safeName = authUser.name?.trim() || "TerraRunner";
 
   const byClerkId = await UserModel.findOne({
     clerkUserId: authUser.clerkUserId,

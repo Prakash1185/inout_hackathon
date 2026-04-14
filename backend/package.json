@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "BitBox backend API",
+  "description": "Terranova backend API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx src/server.ts",

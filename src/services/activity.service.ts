@@ -1,6 +1,11 @@
 import { api } from "./api";
 
-import type { ActivityItem, Coordinate, UserProfile } from "@/shared/types";
+import type {
+    ActivityItem,
+    Coordinate,
+    MapOverviewResponse,
+    UserProfile,
+} from "@/shared/types";
 
 interface CreateActivityPayload {
   coordinates: Coordinate[];
@@ -21,5 +26,10 @@ export async function createActivity(
 
 export async function getUserActivities(): Promise<ActivityItem[]> {
   const response = await api.get<ActivityItem[]>("/activity/user");
+  return response.data;
+}
+
+export async function getMapOverview(): Promise<MapOverviewResponse> {
+  const response = await api.get<MapOverviewResponse>("/activity/map-overview");
   return response.data;
 }

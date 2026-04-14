@@ -1,9 +1,13 @@
 import { Router } from "express";
 
-import { getActiveEventController } from "../controllers/event.controller";
+import {
+    getActiveEventController,
+    getEventsController,
+} from "../controllers/event.controller";
 
 const router = Router();
 
+router.get("/", getEventsController);
 router.get("/active", getActiveEventController);
 
 export const eventRoutes = router;

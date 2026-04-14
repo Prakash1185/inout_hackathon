@@ -13,9 +13,13 @@ interface IdentityState {
 interface AuthState {
   identity: IdentityState | null;
   user: UserProfile | null;
+  isBootstrapping: boolean;
+  hasBootstrapped: boolean;
   setIdentity: (identity: IdentityState) => void;
   clearIdentity: () => void;
   setUser: (user: UserProfile) => void;
+  setBootstrapping: (value: boolean) => void;
+  setHasBootstrapped: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -23,12 +27,22 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       identity: null,
       user: null,
+      isBootstrapping: false,
+      hasBootstrapped: false,
       setIdentity: (identity) => set({ identity }),
-      clearIdentity: () => set({ identity: null, user: null }),
+      clearIdentity: () =>
+        set({
+          identity: null,
+          user: null,
+          isBootstrapping: false,
+          hasBootstrapped: false,
+        }),
       setUser: (user) => set({ user }),
+      setBootstrapping: (value) => set({ isBootstrapping: value }),
+      setHasBootstrapped: (value) => set({ hasBootstrapped: value }),
     }),
     {
-      name: "bitbox-auth-store",
+      name: "terranova-auth-store",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ identity: state.identity, user: state.user }),
     },

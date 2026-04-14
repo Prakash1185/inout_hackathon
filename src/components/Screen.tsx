@@ -1,12 +1,18 @@
 import type { ReactNode } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAppTheme } from "@/src/store/ui-store";
+
 interface ScreenProps {
   children: ReactNode;
 }
 
 export function Screen({ children }: ScreenProps) {
+  const { theme } = useAppTheme();
+
   return (
-    <SafeAreaView className="flex-1 bg-[#0B0F14]">{children}</SafeAreaView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      {children}
+    </SafeAreaView>
   );
 }

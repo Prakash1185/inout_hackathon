@@ -12,14 +12,14 @@ export function requireAuth(
   const name = req.header("x-clerk-name")?.trim();
 
   if (!clerkUserId) {
-    throw new ApiError(401, "Missing Clerk user identity");
+    throw new ApiError(401, "Missing authenticated user identity");
   }
 
   req.authUser = {
     userId: clerkUserId,
     clerkUserId,
-    email: email && email.length > 0 ? email : `${clerkUserId}@clerk.local`,
-    name: name && name.length > 0 ? name : "BitBox Athlete",
+    email: email && email.length > 0 ? email : `${clerkUserId}@auth.local`,
+    name: name && name.length > 0 ? name : "TerraRunner",
   };
 
   next();

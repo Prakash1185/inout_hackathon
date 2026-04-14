@@ -24,7 +24,6 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ xp: -1 });
-userSchema.index({ clerkUserId: 1 });
 
 export type UserDocument = InferSchemaType<typeof userSchema> & { _id: string };
 

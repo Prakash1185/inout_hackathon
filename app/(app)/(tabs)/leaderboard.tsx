@@ -8,8 +8,10 @@ import {
     getEventLeaderboard,
     getGlobalLeaderboard,
 } from "@/src/services/leaderboard.service";
+import { useAppTheme } from "@/src/store/ui-store";
 
 export default function LeaderboardScreen() {
+  const { theme } = useAppTheme();
   const eventQuery = useQuery({
     queryKey: ["active-event"],
     queryFn: getActiveEvent,
@@ -40,16 +42,21 @@ export default function LeaderboardScreen() {
         className="flex-1"
         contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
       >
-        <Text className="text-3xl font-bold text-white">Leaderboard</Text>
-        <Text className="mt-1 text-sm text-[#8fa0b0]">
+        <Text className="text-3xl font-bold" style={{ color: theme.text }}>
+          Leaderboard
+        </Text>
+        <Text className="mt-1 text-sm" style={{ color: theme.textMuted }}>
           Track event and global rankings in real time.
         </Text>
 
-        <View className="mt-5 rounded-2xl border border-[#1f2a33] bg-[#10161a] p-4">
-          <Text className="text-lg font-semibold text-[#38ff9c]">
+        <View
+          className="mt-5 rounded-2xl border p-4"
+          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+        >
+          <Text className="text-lg font-semibold" style={{ color: theme.text }}>
             Event Rankings
           </Text>
-          <Text className="text-xs text-[#8fa0b0]">
+          <Text className="text-xs" style={{ color: theme.textMuted }}>
             {eventQuery.data?.name ?? "Active event"}
           </Text>
 
@@ -58,36 +65,52 @@ export default function LeaderboardScreen() {
               eventRankings.slice(0, 10).map((entry) => (
                 <View
                   key={`${entry.userId}-${entry.rank}`}
-                  className="flex-row items-center justify-between rounded-lg bg-[#151d23] px-3 py-2"
+                  className="flex-row items-center justify-between rounded-lg px-3 py-2"
+                  style={{ backgroundColor: theme.surfaceMuted }}
                 >
-                  <Text className="w-8 text-[#ff8a33]">#{entry.rank}</Text>
-                  <Text className="flex-1 text-white">{entry.name}</Text>
-                  <Text className="font-semibold text-[#38ff9c]">
+                  <Text className="w-8" style={{ color: theme.accent }}>
+                    #{entry.rank}
+                  </Text>
+                  <Text className="flex-1" style={{ color: theme.text }}>
+                    {entry.name}
+                  </Text>
+                  <Text
+                    className="font-semibold"
+                    style={{ color: theme.accent }}
+                  >
                     {entry.totalXp ?? 0} XP
                   </Text>
                 </View>
               ))
             ) : (
-              <Text className="text-[#9aacbb]">
+              <Text style={{ color: theme.textMuted }}>
                 No activity yet for this event.
               </Text>
             )}
           </View>
         </View>
 
-        <View className="mt-5 rounded-2xl border border-[#1f2a33] bg-[#10161a] p-4">
-          <Text className="text-lg font-semibold text-[#ff8a33]">
+        <View
+          className="mt-5 rounded-2xl border p-4"
+          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+        >
+          <Text className="text-lg font-semibold" style={{ color: theme.text }}>
             Global Rankings
           </Text>
           <View className="mt-4 gap-2">
             {globalRankings.slice(0, 10).map((entry) => (
               <View
                 key={`${entry.userId}-${entry.rank}`}
-                className="flex-row items-center justify-between rounded-lg bg-[#151d23] px-3 py-2"
+                className="flex-row items-center justify-between rounded-lg px-3 py-2"
+                style={{ backgroundColor: theme.surfaceMuted }}
               >
-                <Text className="w-8 text-[#ff8a33]">#{entry.rank}</Text>
-                <Text className="flex-1 text-white">{entry.name}</Text>
-                <Text className="font-semibold text-[#38ff9c]">
+                <Text className="w-8" style={{ color: theme.accent }}>
+                  #{entry.rank}
+                </Text>
+                <Text className="flex-1" style={{ color: theme.text }}>
+                  {entry.name}
+                </Text>
+                <Text className="font-semibold" style={{ color: theme.accent }}>
                   {entry.xp ?? 0} XP
                 </Text>
               </View>

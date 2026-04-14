@@ -10,6 +10,7 @@ import { createActivity } from "@/src/services/activity.service";
 import { getActiveEvent } from "@/src/services/event.service";
 import { useActivityStore } from "@/src/store/activity-store";
 import { useAuthStore } from "@/src/store/auth-store";
+import { useAppTheme } from "@/src/store/ui-store";
 import { approximatePolygonAreaSqMeters } from "@/src/utils/geo";
 
 function estimateXp(distanceKm: number, areaSqMeters: number): number {
@@ -17,6 +18,7 @@ function estimateXp(distanceKm: number, areaSqMeters: number): number {
 }
 
 export default function ActivityResultScreen() {
+  const { theme } = useAppTheme();
   const queryClient = useQueryClient();
   const coordinates = useActivityStore((state) => state.coordinates);
   const distanceKm = useActivityStore((state) => state.distanceKm);
@@ -69,7 +71,9 @@ export default function ActivityResultScreen() {
     return (
       <Screen>
         <View className="flex-1 items-center justify-center p-6">
-          <Text className="text-lg text-white">No tracked activity found.</Text>
+          <Text className="text-lg" style={{ color: theme.text }}>
+            No tracked activity found.
+          </Text>
           <View className="mt-4">
             <NeonButton
               label="Back to Home"
@@ -87,8 +91,10 @@ export default function ActivityResultScreen() {
         className="flex-1"
         contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
       >
-        <Text className="text-3xl font-bold text-white">Activity Result</Text>
-        <Text className="mt-1 text-sm text-[#8da0b2]">
+        <Text className="text-3xl font-bold" style={{ color: theme.text }}>
+          Activity Result
+        </Text>
+        <Text className="mt-1 text-sm" style={{ color: theme.textMuted }}>
           Your run has been analyzed. Save it to compete.
         </Text>
 
