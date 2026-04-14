@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
@@ -24,8 +25,16 @@ export default function LoginScreen() {
       setSession(data.token, data.user);
       router.replace("/(app)/(tabs)/home");
     },
-    onError: () => {
-      setError("Invalid credentials. Please try again.");
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        const message =
+          (error.response?.data as { message?: string } | undefined)?.message ??
+          "Unable to reach server. Check backend and API URL.";
+        setError(message);
+        return;
+      }
+
+      setError("Unable to login right now. Please try again.");
     },
   });
 

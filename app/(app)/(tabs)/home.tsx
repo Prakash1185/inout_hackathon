@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
+// eslint-disable-next-line import/no-unresolved
+import { HomeTerritoryMap } from "@/src/components/maps/HomeTerritoryMap";
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
 import { StatCard } from "@/src/components/StatCard";
@@ -14,21 +16,6 @@ import { getMyProfile } from "@/src/services/user.service";
 import { useAuthStore } from "@/src/store/auth-store";
 
 export default function HomeScreen() {
-  const mapsModule = useMemo(() => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("react-native-maps");
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const MapView = mapsModule?.default;
-  const Circle = mapsModule?.Circle;
-  const Marker = mapsModule?.Marker;
-  const Polygon = mapsModule?.Polygon;
-  const isMapsAvailable = Boolean(MapView && Circle && Marker && Polygon);
-
   const [currentLocation, setCurrentLocation] =
     useState<Location.LocationObjectCoords | null>(null);
   const setUser = useAuthStore((state) => state.setUser);
@@ -143,54 +130,19 @@ export default function HomeScreen() {
         </View>
 
         <View className="mt-5 h-[300px] overflow-hidden rounded-2xl border border-[#22303a]">
-          {isMapsAvailable ? (
-            <MapView
-              style={{ flex: 1 }}
-              initialRegion={region}
-              region={region}
-              showsUserLocation
-              showsMyLocationButton
-              mapType="mutedStandard"
-            >
-              {currentLocation ? (
-                <Marker
-                  coordinate={{
+          <HomeTerritoryMap
+            region={region}
+            currentLocation={
+              currentLocation
+                ? {
                     latitude: currentLocation.latitude,
                     longitude: currentLocation.longitude,
-                  }}
-                  title="You"
-                />
-              ) : null}
-              {territoryPolygons.map((polygon, index) => (
-                <Polygon
-                  key={`polygon-${polygon[0]?.latitude}-${polygon[0]?.longitude}-${index}`}
-                  coordinates={polygon}
-                  strokeWidth={2}
-                  strokeColor="rgba(56,255,156,0.85)"
-                  fillColor="rgba(56,255,156,0.14)"
-                />
-              ))}
-              {territoryCenters.map((center, index) => (
-                <Circle
-                  key={`${center.latitude}-${center.longitude}-${index}`}
-                  center={center}
-                  radius={45}
-                  strokeColor="rgba(56,255,156,0.8)"
-                  fillColor="rgba(56,255,156,0.18)"
-                />
-              ))}
-            </MapView>
-          ) : (
-            <View className="flex-1 items-center justify-center bg-[#0e1317] px-4">
-              <Text className="text-center text-sm text-[#c1ceda]">
-                Map native module unavailable in this client.
-              </Text>
-              <Text className="mt-2 text-center text-xs text-[#8fa0b0]">
-                Use a development build (`npx expo run:android` / `npx expo
-                run:ios`) after installing dependencies.
-              </Text>
-            </View>
-          )}
+                  }
+                : null
+            }
+            territoryPolygons={territoryPolygons}
+            territoryCenters={territoryCenters}
+          />
         </View>
 
         <View className="mt-5">

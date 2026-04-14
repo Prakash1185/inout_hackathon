@@ -3,6 +3,8 @@ import { router } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import { Alert, Text, View } from "react-native";
 
+// eslint-disable-next-line import/no-unresolved
+import { ActivityTrackingMap } from "@/src/components/maps/ActivityTrackingMap";
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
 import { useActivityStore } from "@/src/store/activity-store";
@@ -11,19 +13,6 @@ import { calculateDistanceKm } from "@/src/utils/geo";
 import type { Coordinate } from "@/shared/types";
 
 export default function ActivityTrackingScreen() {
-  const mapsModule = useMemo(() => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("react-native-maps");
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const MapView = mapsModule?.default;
-  const Polyline = mapsModule?.Polyline;
-  const isMapsAvailable = Boolean(MapView && Polyline);
-
   const [isTracking, setIsTracking] = useState(false);
   const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
   const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
@@ -122,35 +111,10 @@ export default function ActivityTrackingScreen() {
         </View>
 
         <View className="mt-4 flex-1 overflow-hidden rounded-2xl border border-[#22303a]">
-          {isMapsAvailable ? (
-            <MapView
-              style={{ flex: 1 }}
-              initialRegion={{
-                ...initialCoordinate,
-                latitudeDelta: 0.02,
-                longitudeDelta: 0.02,
-              }}
-              showsUserLocation
-              followsUserLocation
-            >
-              {coordinates.length > 1 ? (
-                <Polyline
-                  coordinates={coordinates}
-                  strokeColor="#38ff9c"
-                  strokeWidth={5}
-                />
-              ) : null}
-            </MapView>
-          ) : (
-            <View className="flex-1 items-center justify-center bg-[#0e1317] px-4">
-              <Text className="text-center text-sm text-[#c1ceda]">
-                Map native module unavailable in this client.
-              </Text>
-              <Text className="mt-2 text-center text-xs text-[#8fa0b0]">
-                Run this app in a development build to use GPS map tracking.
-              </Text>
-            </View>
-          )}
+          <ActivityTrackingMap
+            initialCoordinate={initialCoordinate}
+            coordinates={coordinates}
+          />
         </View>
 
         <View className="mt-5">
