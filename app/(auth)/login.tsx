@@ -1,92 +1,75 @@
-import { useMutation } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
+import { useOAuth } from "@clerk/clerk-expo";
 import { Link, router } from "expo-router";
 import { useState } from "react";
-import {
-    ActivityIndicator,
-    Pressable,
-    Text,
-    TextInput,
-    View,
-} from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 
-import { login } from "@/src/services/auth.service";
-import { useAuthStore } from "@/src/store/auth-store";
+import { NeonButton } from "@/src/components/NeonButton";
 
 export default function LoginScreen() {
-  const setSession = useAuthStore((state) => state.setSession);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const mutation = useMutation({
-    mutationFn: login,
-    onSuccess: (data) => {
-      setSession(data.token, data.user);
-      router.replace("/(app)/(tabs)/home");
-    },
-    onError: (error) => {
-      if (isAxiosError(error)) {
-        const message =
-          (error.response?.data as { message?: string } | undefined)?.message ??
-          "Unable to reach server. Check backend and API URL.";
-        setError(message);
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const { createdSessionId, setActive } = await startOAuthFlow();
+
+      if (!createdSessionId || !setActive) {
+        setError("Google login was cancelled.");
         return;
       }
 
-      setError("Unable to login right now. Please try again.");
-    },
-  });
+      await setActive({ session: createdSessionId });
+      router.replace("/(app)/(tabs)/home");
+    } catch {
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View className="flex-1 justify-center bg-[#050607] px-6">
-      <Text className="text-3xl font-bold tracking-tight text-white">
-        Welcome Back
+    <View className="flex-1 justify-center bg-[#0B0F14] px-6">
+      <Text className="text-4xl font-extrabold tracking-tight text-white">
+        BitBox
       </Text>
-      <Text className="mt-2 text-[#8da0b2]">
-        Track your next run and own the leaderboard.
+      <Text className="mt-2 text-base text-[#9CA3AF]">
+        Capture streets. Earn XP. Dominate the leaderboard.
       </Text>
 
-      <View className="mt-8 gap-3">
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Email"
-          placeholderTextColor="#64748b"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          className="rounded-xl border border-[#25303a] bg-[#12171b] px-4 py-3 text-white"
-        />
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Password"
-          placeholderTextColor="#64748b"
-          secureTextEntry
-          className="rounded-xl border border-[#25303a] bg-[#12171b] px-4 py-3 text-white"
-        />
+      <View className="mt-10 rounded-2xl border border-[#1F2937] bg-[#121821] p-5">
+        <Text className="text-sm uppercase tracking-[2px] text-[#38B6FF]">
+          Google Login Only
+        </Text>
+        <Text className="mt-2 text-sm text-[#9CA3AF]">
+          Continue with Google using Clerk secure authentication.
+        </Text>
+
+        <View className="mt-5">
+          <NeonButton
+            label={loading ? "Connecting..." : "Continue with Google"}
+            onPress={() => void handleGoogleLogin()}
+            disabled={loading}
+            variant="primary"
+          />
+        </View>
+
+        {loading ? (
+          <ActivityIndicator color="#00FF9D" className="mt-4" />
+        ) : null}
       </View>
 
       {error ? (
-        <Text className="mt-3 text-sm text-[#ff8a33]">{error}</Text>
+        <Text className="mt-4 text-sm text-[#FF7A00]">{error}</Text>
       ) : null}
 
-      <Pressable
-        className="mt-6 items-center rounded-xl bg-[#1c3f2e] py-3"
-        onPress={() => mutation.mutate({ email, password })}
-        disabled={mutation.isPending}
-      >
-        {mutation.isPending ? (
-          <ActivityIndicator color="#38ff9c" />
-        ) : (
-          <Text className="font-semibold text-[#d9ffe9]">Login</Text>
-        )}
-      </Pressable>
-
       <Text className="mt-6 text-center text-[#90a1b0]">
-        New here?{" "}
-        <Link href="/(auth)/signup" className="font-semibold text-[#38ff9c]">
-          Create account
+        Need signup route?{" "}
+        <Link href="/(auth)/signup" className="font-semibold text-[#00FF9D]">
+          Open signup
         </Link>
       </Text>
     </View>

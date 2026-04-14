@@ -34,10 +34,12 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
+  const identity = useAuthStore.getState().identity;
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (identity?.clerkUserId) {
+    config.headers["x-clerk-user-id"] = identity.clerkUserId;
+    config.headers["x-clerk-email"] = identity.email;
+    config.headers["x-clerk-name"] = identity.name;
   }
 
   return config;

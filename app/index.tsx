@@ -1,15 +1,15 @@
+import { useAuth } from "@clerk/clerk-expo";
 import { Redirect } from "expo-router";
 import { View } from "react-native";
 
-import { useAuthStore } from "@/src/store/auth-store";
-
 export default function Index() {
-  const token = useAuthStore((state) => state.token);
-  const hydrated = useAuthStore((state) => state.hydrated);
+  const { isLoaded, isSignedIn } = useAuth();
 
-  if (!hydrated) {
-    return <View className="flex-1 bg-[#050607]" />;
+  if (!isLoaded) {
+    return <View className="flex-1 bg-[#0B0F14]" />;
   }
 
-  return <Redirect href={token ? "/(app)/(tabs)/home" : "/(auth)/login"} />;
+  return (
+    <Redirect href={isSignedIn ? "/(app)/(tabs)/home" : "/(auth)/login"} />
+  );
 }

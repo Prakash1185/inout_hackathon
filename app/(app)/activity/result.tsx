@@ -124,6 +124,7 @@ export default function ActivityResultScreen() {
               })
             }
             disabled={saveMutation.isPending}
+            variant="primary"
           />
           <NeonButton
             label="Discard"
@@ -131,6 +132,7 @@ export default function ActivityResultScreen() {
               resetDraft();
               router.replace("/(app)/(tabs)/home");
             }}
+            variant="secondary"
           />
         </View>
       </ScrollView>

@@ -39,6 +39,7 @@ export function HomeTerritoryMap({
             longitude: currentLocation.longitude,
           }}
           title="You"
+          pinColor="#38B6FF"
         />
       ) : null}
       {territoryPolygons.map((polygon, index) => (
@@ -46,8 +47,8 @@ export function HomeTerritoryMap({
           key={`polygon-${polygon[0]?.latitude}-${polygon[0]?.longitude}-${index}`}
           coordinates={polygon}
           strokeWidth={2}
-          strokeColor="rgba(56,255,156,0.85)"
-          fillColor="rgba(56,255,156,0.14)"
+          strokeColor="rgba(0,255,157,0.88)"
+          fillColor="rgba(0,255,157,0.2)"
         />
       ))}
       {territoryCenters.map((center, index) => (
@@ -55,8 +56,8 @@ export function HomeTerritoryMap({
           key={`${center.latitude}-${center.longitude}-${index}`}
           center={center}
           radius={45}
-          strokeColor="rgba(56,255,156,0.8)"
-          fillColor="rgba(56,255,156,0.18)"
+          strokeColor="rgba(0,255,157,0.8)"
+          fillColor="rgba(0,255,157,0.2)"
         />
       ))}
     </MapView>

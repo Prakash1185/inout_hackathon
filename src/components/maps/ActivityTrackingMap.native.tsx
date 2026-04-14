@@ -20,12 +20,11 @@ export function ActivityTrackingMap({
         longitudeDelta: 0.02,
       }}
       showsUserLocation
-      followsUserLocation
     >
       {coordinates.length > 1 ? (
         <Polyline
           coordinates={coordinates}
-          strokeColor="#38ff9c"
+          strokeColor="#FF7A00"
           strokeWidth={5}
         />
       ) : null}

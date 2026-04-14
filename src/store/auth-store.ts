@@ -4,34 +4,33 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { UserProfile } from "@/shared/types";
 
+interface IdentityState {
+  clerkUserId: string;
+  email: string;
+  name: string;
+}
+
 interface AuthState {
-  token: string | null;
+  identity: IdentityState | null;
   user: UserProfile | null;
-  hydrated: boolean;
-  setSession: (token: string, user: UserProfile) => void;
-  clearSession: () => void;
+  setIdentity: (identity: IdentityState) => void;
+  clearIdentity: () => void;
   setUser: (user: UserProfile) => void;
-  setHydrated: (hydrated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: null,
+      identity: null,
       user: null,
-      hydrated: false,
-      setSession: (token, user) => set({ token, user }),
-      clearSession: () => set({ token: null, user: null }),
+      setIdentity: (identity) => set({ identity }),
+      clearIdentity: () => set({ identity: null, user: null }),
       setUser: (user) => set({ user }),
-      setHydrated: (hydrated) => set({ hydrated }),
     }),
     {
       name: "bitbox-auth-store",
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ token: state.token, user: state.user }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated(true);
-      },
+      partialize: (state) => ({ identity: state.identity, user: state.user }),
     },
   ),
 );

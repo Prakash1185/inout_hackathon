@@ -2,8 +2,8 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 
 import { ActivityModel } from "../models/Activity";
-import { UserModel } from "../models/User";
 import { getOrCreateActiveEvent } from "../services/event.service";
+import { getOrCreateUserFromAuth } from "../services/user-auth.service";
 import { ApiError } from "../utils/api-error";
 import { asyncHandler } from "../utils/async-handler";
 import {
@@ -28,21 +28,16 @@ const createActivitySchema = z.object({
 
 export const createActivityController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.authUser?.userId;
-    if (!userId) {
+    if (!req.authUser) {
       throw new ApiError(401, "Unauthorized");
     }
 
     const body = createActivitySchema.parse(req.body);
 
     const [user, activeEvent] = await Promise.all([
-      UserModel.findById(userId),
+      getOrCreateUserFromAuth(req.authUser),
       getOrCreateActiveEvent(),
     ]);
-
-    if (!user) {
-      throw new ApiError(404, "User not found");
-    }
 
     const eventId = body.eventId ?? activeEvent._id.toString();
     const distance = Number(calculateDistanceKm(body.coordinates).toFixed(3));
@@ -64,7 +59,7 @@ export const createActivityController = asyncHandler(
     }
 
     const activity = await ActivityModel.create({
-      userId,
+      userId: user._id,
       coordinates: body.coordinates,
       distance,
       areaCaptured,
@@ -98,12 +93,13 @@ export const createActivityController = asyncHandler(
 
 export const getUserActivitiesController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.authUser?.userId;
-    if (!userId) {
+    if (!req.authUser) {
       throw new ApiError(401, "Unauthorized");
     }
 
-    const activities = await ActivityModel.find({ userId })
+    const user = await getOrCreateUserFromAuth(req.authUser);
+
+    const activities = await ActivityModel.find({ userId: user._id })
       .sort({ createdAt: -1 })
       .limit(50);
 

@@ -85,6 +85,39 @@ export default function HomeScreen() {
       .map((activity) => activity.coordinates);
   }, [activitiesQuery.data]);
 
+  const demoTerritories = useMemo(
+    () => [
+      [
+        { latitude: 19.0802, longitude: 72.8721 },
+        { latitude: 19.0843, longitude: 72.8768 },
+        { latitude: 19.0818, longitude: 72.8821 },
+        { latitude: 19.0778, longitude: 72.8797 },
+      ],
+      [
+        { latitude: 19.0698, longitude: 72.8898 },
+        { latitude: 19.0737, longitude: 72.8924 },
+        { latitude: 19.0711, longitude: 72.8986 },
+        { latitude: 19.0667, longitude: 72.8963 },
+      ],
+      [
+        { latitude: 19.0624, longitude: 72.8654 },
+        { latitude: 19.0662, longitude: 72.8682 },
+        { latitude: 19.0641, longitude: 72.8733 },
+        { latitude: 19.0596, longitude: 72.8707 },
+      ],
+    ],
+    [],
+  );
+
+  const demoCenters = useMemo(
+    () => [
+      { latitude: 19.0786, longitude: 72.8786 },
+      { latitude: 19.0704, longitude: 72.8941 },
+      { latitude: 19.0627, longitude: 72.8696 },
+    ],
+    [],
+  );
+
   const profile = profileQuery.data;
 
   return (
@@ -94,18 +127,18 @@ export default function HomeScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
       >
         <Text className="text-3xl font-bold text-white">Map Dashboard</Text>
-        <Text className="mt-1 text-sm text-[#8a9aab]">
+        <Text className="mt-1 text-sm text-[#9CA3AF]">
           Capture territory with every run. Compete. Grow your streak.
         </Text>
 
-        <View className="mt-4 rounded-2xl border border-[#22303a] bg-[#12181d] p-3">
-          <Text className="text-xs uppercase tracking-[1.5px] text-[#7f8f9d]">
+        <View className="mt-4 rounded-2xl border border-[#1F2937] bg-[#121821] p-3">
+          <Text className="text-xs uppercase tracking-[1.5px] text-[#6B7280]">
             Active Event
           </Text>
-          <Text className="mt-2 text-lg font-semibold text-[#38ff9c]">
+          <Text className="mt-2 text-lg font-semibold text-[#00FF9D]">
             {eventQuery.data?.name ?? "No active event"}
           </Text>
-          <Text className="mt-1 text-sm text-[#9dafbf]">
+          <Text className="mt-1 text-sm text-[#9CA3AF]">
             {eventQuery.data?.location ?? "India"}
           </Text>
         </View>
@@ -129,7 +162,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="mt-5 h-[300px] overflow-hidden rounded-2xl border border-[#22303a]">
+        <View className="mt-5 h-[300px] overflow-hidden rounded-2xl border border-[#1F2937]">
           <HomeTerritoryMap
             region={region}
             currentLocation={
@@ -140,8 +173,8 @@ export default function HomeScreen() {
                   }
                 : null
             }
-            territoryPolygons={territoryPolygons}
-            territoryCenters={territoryCenters}
+            territoryPolygons={[...demoTerritories, ...territoryPolygons]}
+            territoryCenters={[...demoCenters, ...territoryCenters]}
           />
         </View>
 
@@ -149,6 +182,7 @@ export default function HomeScreen() {
           <NeonButton
             label="Start Activity"
             onPress={() => router.push("/(app)/activity")}
+            variant="primary"
           />
         </View>
       </ScrollView>

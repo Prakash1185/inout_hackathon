@@ -1,3 +1,4 @@
+import { useClerk } from "@clerk/clerk-expo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -7,9 +8,10 @@ import { getMyProfile, updateProfile } from "@/src/services/user.service";
 import { useAuthStore } from "@/src/store/auth-store";
 
 export default function ProfileScreen() {
+  const { signOut } = useClerk();
   const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.user);
-  const clearSession = useAuthStore((state) => state.clearSession);
+  const clearIdentity = useAuthStore((state) => state.clearIdentity);
   const setUser = useAuthStore((state) => state.setUser);
 
   const profileQuery = useQuery({
@@ -84,8 +86,9 @@ export default function ProfileScreen() {
 
         <Pressable
           className="mt-6 rounded-lg border border-[#4f2a2a] py-3"
-          onPress={() => {
-            clearSession();
+          onPress={async () => {
+            await signOut();
+            clearIdentity();
             queryClient.clear();
           }}
         >
