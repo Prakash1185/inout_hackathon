@@ -13,23 +13,28 @@ export interface AppThemePalette {
 
 export const themes: Record<ThemeMode, AppThemePalette> = {
   dark: {
-    background: "#0C1220",
-    surface: "#121B2D",
-    surfaceMuted: "#1A2741",
-    border: "#223457",
-    text: "#EAF1FF",
-    textMuted: "#9FB2D6",
-    accent: "#4D84FF",
-    accentSoft: "#1F3561",
+    background: "#0B0F14", // near black (premium)
+    surface: "#121821", // card bg
+    surfaceMuted: "#1A2230", // subtle layers
+    border: "#263042", // soft border
+
+    text: "#F8FAFC", // clean white
+    textMuted: "#9AA4B2", // muted gray
+
+    accent: "#00E676", // neon green 🔥
+    accentSoft: "#00C853", // darker green
   },
+
   light: {
-    background: "#F2F6FF",
-    surface: "#FFFFFF",
-    surfaceMuted: "#E6EEFF",
-    border: "#CBD9F5",
-    text: "#0E1A30",
-    textMuted: "#60789F",
-    accent: "#2E67E8",
-    accentSoft: "#D8E4FF",
+    background: "#F9FBF9", // near white (soft green tint)
+    surface: "#FFFFFF", // clean cards
+    surfaceMuted: "#F1F5F3", // subtle bg sections
+    border: "#E2E8F0", // soft border
+
+    text: "#0F172A", // dark text
+    textMuted: "#64748B", // muted gray
+
+    accent: "#16A34A", // strong green
+    accentSoft: "#22C55E", // lighter green
   },
 };
