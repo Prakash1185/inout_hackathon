@@ -3,12 +3,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
-    Modal,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { NeonButton } from "@/src/components/NeonButton";
@@ -35,6 +35,7 @@ interface BadgeInfo {
   description: string;
   icon: IconName;
   unlocked: boolean;
+  progress: number;
 }
 
 interface TrainingItem {
@@ -119,6 +120,7 @@ const badgeCatalog: BadgeInfo[] = [
     description: "Completed activity for 10 straight days.",
     icon: "flame-outline",
     unlocked: true,
+    progress: 100,
   },
   {
     id: "bdg-2",
@@ -126,6 +128,7 @@ const badgeCatalog: BadgeInfo[] = [
     description: "Crossed 30km distance in a single week.",
     icon: "heart-outline",
     unlocked: true,
+    progress: 100,
   },
   {
     id: "bdg-3",
@@ -133,6 +136,7 @@ const badgeCatalog: BadgeInfo[] = [
     description: "Stayed within nutrition targets for 7 days.",
     icon: "restaurant-outline",
     unlocked: false,
+    progress: 68,
   },
   {
     id: "bdg-4",
@@ -140,6 +144,7 @@ const badgeCatalog: BadgeInfo[] = [
     description: "Finished 12 strength sessions this month.",
     icon: "shield-checkmark-outline",
     unlocked: false,
+    progress: 42,
   },
 ];
 
@@ -154,6 +159,33 @@ const demoProfile = {
   createdAt: new Date().toISOString(),
   nextLevelXp: 1500,
 };
+
+const healthIndicators = [
+  {
+    label: "Recovery",
+    value: 82,
+    icon: "pulse-outline" as IconName,
+    note: "On track",
+  },
+  {
+    label: "Hydration",
+    value: 74,
+    icon: "water-outline" as IconName,
+    note: "Needs 0.4L",
+  },
+  {
+    label: "Sleep Quality",
+    value: 88,
+    icon: "moon-outline" as IconName,
+    note: "Strong",
+  },
+  {
+    label: "Exercise Consistency",
+    value: 79,
+    icon: "barbell-outline" as IconName,
+    note: "Good rhythm",
+  },
+];
 
 function getMetricValue(item: WeeklyStat, metric: ChartMetric) {
   return item[metric];
@@ -488,7 +520,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View className="mt-4 flex-row items-end gap-2">
+          <View className="mt-4 flex-row items-end gap-1">
             {stats.map((item) => {
               const value = Number(getMetricValue(item, chartMetric));
               const barHeight = Math.max(
@@ -561,23 +593,33 @@ export default function ProfileScreen() {
           className="mt-3 rounded-2xl border p-4"
           style={{ borderColor: theme.border, backgroundColor: theme.surface }}
         >
-          {[
-            { label: "Recovery", value: 82 },
-            { label: "Hydration", value: 74 },
-            { label: "Sleep Quality", value: 88 },
-            { label: "Exercise Consistency", value: 79 },
-          ].map((item) => (
+          {healthIndicators.map((item) => (
             <View key={item.label} className="mb-3 last:mb-0">
               <View className="flex-row items-center justify-between">
-                <Text className="text-xs" style={{ color: theme.textMuted }}>
-                  {item.label}
-                </Text>
-                <Text
-                  className="text-xs font-semibold"
-                  style={{ color: theme.text }}
-                >
-                  {item.value}%
-                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Ionicons
+                    name={item.icon}
+                    size={14}
+                    color={theme.textMuted}
+                  />
+                  <Text className="text-xs" style={{ color: theme.textMuted }}>
+                    {item.label}
+                  </Text>
+                </View>
+                <View className="items-end">
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    {item.value}%
+                  </Text>
+                  <Text
+                    className="text-[10px]"
+                    style={{ color: theme.textMuted }}
+                  >
+                    {item.note}
+                  </Text>
+                </View>
               </View>
               <View
                 className="mt-1 h-2 overflow-hidden rounded-full"
@@ -702,6 +744,24 @@ export default function ProfileScreen() {
               >
                 {badge.unlocked ? "Unlocked" : "In progress"}
               </Text>
+              <View
+                className="mt-2 h-1.5 overflow-hidden rounded-full"
+                style={{ backgroundColor: theme.surfaceMuted }}
+              >
+                <View
+                  className="h-1.5 rounded-full"
+                  style={{
+                    width: `${badge.progress}%`,
+                    backgroundColor: theme.accent,
+                  }}
+                />
+              </View>
+              <Text
+                className="mt-1 text-[10px]"
+                style={{ color: theme.textMuted }}
+              >
+                {badge.progress}% milestone
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -727,12 +787,7 @@ export default function ProfileScreen() {
             queryClient.clear();
           }}
         >
-          <Text
-            className="text-center font-semibold"
-            style={{ color: theme.accent }}
-          >
-            Logout
-          </Text>
+          <Text className="text-center font-semibold text-red-500">Logout</Text>
         </Pressable>
       </ScrollView>
 
