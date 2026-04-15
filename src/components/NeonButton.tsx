@@ -45,7 +45,7 @@ export function NeonButton({
         {icon}
         <Text
           className="text-base font-semibold tracking-wide"
-          style={{ color: primary ? "#FFFFFF" : theme.text }}
+          style={{ color: primary ? "#2D2308" : theme.text }}
         >
           {label}
         </Text>
