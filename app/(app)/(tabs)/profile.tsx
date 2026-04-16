@@ -19,6 +19,7 @@ import {
 
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
+import { getUserActivities } from "@/src/services/activity.service";
 import { getMyProfile, updateProfile } from "@/src/services/user.service";
 import { useAuthStore } from "@/src/store/auth-store";
 import { useAppTheme } from "@/src/store/ui-store";
@@ -210,6 +211,20 @@ function formatMetricValue(value: number, metric: ChartMetric) {
   return `${Math.round(value).toLocaleString()} kcal`;
 }
 
+function formatActivityTimeLabel(raw: string) {
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Recently";
+  }
+
+  return parsed.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut } = useClerk();
@@ -236,6 +251,11 @@ export default function ProfileScreen() {
     queryKey: ["profile"],
     queryFn: getMyProfile,
     initialData: authUser ?? undefined,
+  });
+
+  const activitiesQuery = useQuery({
+    queryKey: ["my-activities"],
+    queryFn: getUserActivities,
   });
 
   const [period, setPeriod] = useState<PeriodKey>("7D");
@@ -285,6 +305,7 @@ export default function ProfileScreen() {
 
   const nextLevelXp = profile.nextLevelXp ?? profile.xp + 300;
   const levelProgress = Math.min(1, profile.xp / Math.max(nextLevelXp, 1));
+  const recentWalks = activitiesQuery.data?.slice(0, 4) ?? [];
 
   return (
     <Screen>
@@ -656,6 +677,96 @@ export default function ProfileScreen() {
             </View>
           ))}
         </View>
+
+        <View className="mt-6 flex-row items-center justify-between">
+          <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+            Walking Activity Log
+          </Text>
+          <Pressable
+            onPress={() => router.push("/(app)/profile/exercises-history")}
+          >
+            <Text className="text-xs" style={{ color: theme.textMuted }}>
+              show all
+            </Text>
+          </Pressable>
+        </View>
+
+        {activitiesQuery.isLoading ? (
+          <View
+            className="mt-3 rounded-2xl border p-4"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text className="text-sm" style={{ color: theme.textMuted }}>
+              Loading recent walks...
+            </Text>
+          </View>
+        ) : null}
+
+        {!activitiesQuery.isLoading && recentWalks.length === 0 ? (
+          <View
+            className="mt-3 rounded-2xl border p-4"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text className="text-sm" style={{ color: theme.textMuted }}>
+              No walk logs yet. Complete a tracked walk to populate this list.
+            </Text>
+          </View>
+        ) : null}
+
+        {!activitiesQuery.isLoading && recentWalks.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mt-3"
+            contentContainerStyle={{ gap: 10, paddingRight: 8 }}
+          >
+            {recentWalks.map((item) => (
+              <View
+                key={item.id}
+                className="w-64 rounded-2xl border p-3"
+                style={{
+                  borderColor: theme.border,
+                  backgroundColor: theme.surface,
+                }}
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    {item.distance.toFixed(2)} km walk
+                  </Text>
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{ color: theme.accent }}
+                  >
+                    +{item.xpEarned} XP
+                  </Text>
+                </View>
+
+                <Text
+                  className="mt-1 text-xs"
+                  style={{ color: theme.textMuted }}
+                >
+                  Captured {item.areaCaptured.toFixed(0)} m2
+                </Text>
+
+                <Text
+                  className="mt-2 text-[11px]"
+                  style={{ color: theme.textMuted }}
+                >
+                  {formatActivityTimeLabel(item.createdAt)}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        ) : null}
 
         <View className="mt-6 flex-row items-center justify-between">
           <Text className="text-2xl font-bold" style={{ color: theme.text }}>
