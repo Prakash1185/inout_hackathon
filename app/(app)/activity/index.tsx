@@ -1,169 +1,269 @@
-import * as Location from "expo-location";
-import { router } from "expo-router";
-import { useMemo, useRef, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useMemo } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import MapView, { Marker, Polygon, Polyline } from "react-native-maps";
 
-// eslint-disable-next-line import/no-unresolved
-import { ActivityTrackingMap } from "@/src/components/maps/ActivityTrackingMap";
-import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
-import { useActivityStore } from "@/src/store/activity-store";
 import { useAppTheme } from "@/src/store/ui-store";
-import { calculateDistanceKm } from "@/src/utils/geo";
-
-import type { Coordinate } from "@/shared/types";
 
 export default function ActivityTrackingScreen() {
   const { theme } = useAppTheme();
-  const [isTracking, setIsTracking] = useState(false);
-  const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
-  const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
-
-  const setActivityDraft = useActivityStore((state) => state.setActivityDraft);
-
-  const distanceKm = useMemo(
-    () => calculateDistanceKm(coordinates),
-    [coordinates],
+  const initialRegion = useMemo(
+    () => ({
+      latitude: 28.4744,
+      longitude: 77.504,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    }),
+    [],
   );
 
-  async function startTracking() {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (permission.status !== "granted") {
-      Alert.alert(
-        "Permission required",
-        "Location permission is required to track activity.",
-      );
-      return;
-    }
+  const currentLocation = useMemo(
+    () => ({
+      latitude: 28.4744,
+      longitude: 77.504,
+    }),
+    [],
+  );
 
-    const initial = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-    setCoordinates([
-      {
-        latitude: initial.coords.latitude,
-        longitude: initial.coords.longitude,
-      },
-    ]);
+  const samplePath = useMemo(
+    () => [
+      { latitude: 28.4728, longitude: 77.4972 },
+      { latitude: 28.4736, longitude: 77.4991 },
+      { latitude: 28.4744, longitude: 77.5017 },
+      { latitude: 28.4756, longitude: 77.504 },
+      { latitude: 28.4771, longitude: 77.5061 },
+      { latitude: 28.4784, longitude: 77.5082 },
+      { latitude: 28.4792, longitude: 77.5101 },
+    ],
+    [],
+  );
 
-    subscriptionRef.current = await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 3000,
-        distanceInterval: 4,
-      },
-      (loc) => {
-        setCoordinates((prev) => [
-          ...prev,
-          { latitude: loc.coords.latitude, longitude: loc.coords.longitude },
-        ]);
-      },
-    );
+  const greenTerritory = useMemo(
+    () => [
+      { latitude: 28.4767, longitude: 77.5002 },
+      { latitude: 28.4776, longitude: 77.5025 },
+      { latitude: 28.4754, longitude: 77.5035 },
+      { latitude: 28.4746, longitude: 77.5013 },
+    ],
+    [],
+  );
 
-    setIsTracking(true);
-  }
-
-  function stopTracking() {
-    subscriptionRef.current?.remove();
-    subscriptionRef.current = null;
-    setIsTracking(false);
-
-    if (coordinates.length < 2) {
-      Alert.alert(
-        "Not enough data",
-        "Move a bit more before stopping the activity.",
-      );
-      return;
-    }
-
-    setActivityDraft(coordinates, distanceKm);
-    router.push("/(app)/activity/result");
-  }
-
-  const initialCoordinate = coordinates[0] ?? {
-    latitude: 19.076,
-    longitude: 72.8777,
-  };
+  const redTerritory = useMemo(
+    () => [
+      { latitude: 28.4729, longitude: 77.5054 },
+      { latitude: 28.4737, longitude: 77.5073 },
+      { latitude: 28.4719, longitude: 77.5084 },
+      { latitude: 28.4712, longitude: 77.5062 },
+    ],
+    [],
+  );
 
   return (
     <Screen>
-      <View className="flex-1 p-4">
-        <Text className="text-2xl font-bold" style={{ color: theme.text }}>
-          Activity Tracking
-        </Text>
-        <Text className="mt-1 text-sm" style={{ color: theme.textMuted }}>
-          Start moving to draw your path in real time.
-        </Text>
-
-        <View className="mt-4 flex-row gap-3">
-          <View
-            className="flex-1 rounded-xl border p-3"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surface,
-            }}
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.background,
+          },
+        ]}
+      >
+        <View style={styles.header}>
+          <Pressable
+            style={[
+              styles.iconButton,
+              {
+                borderColor: theme.border,
+                backgroundColor: theme.surface,
+              },
+            ]}
           >
-            <Text
-              className="text-xs uppercase tracking-wider"
-              style={{ color: theme.textMuted }}
-            >
+            <Ionicons name="settings-outline" size={18} color={theme.text} />
+          </Pressable>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>ACTIVITY</Text>
+          <Pressable
+            style={[
+              styles.iconButton,
+              {
+                borderColor: theme.border,
+                backgroundColor: theme.surface,
+              },
+            ]}
+          >
+            <Ionicons name="time-outline" size={18} color={theme.text} />
+          </Pressable>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View
+            style={[
+              styles.statCard,
+              {
+                borderColor: theme.border,
+                backgroundColor: theme.surface,
+              },
+            ]}
+          >
+            <Text style={[styles.statLabel, { color: theme.textMuted }]}>
               Distance
             </Text>
-            <Text
-              className="mt-2 text-xl font-bold"
-              style={{ color: theme.accent }}
-            >
-              {distanceKm.toFixed(2)} km
+            <Text style={[styles.statValue, { color: theme.text }]}>
+              2.4 km
             </Text>
           </View>
           <View
-            className="flex-1 rounded-xl border p-3"
             style={{
+              ...styles.statCard,
               borderColor: theme.border,
               backgroundColor: theme.surface,
             }}
           >
-            <Text
-              className="text-xs uppercase tracking-wider"
-              style={{ color: theme.textMuted }}
-            >
-              Points
+            <Text style={[styles.statLabel, { color: theme.textMuted }]}>
+              Points / XP
             </Text>
-            <Text
-              className="mt-2 text-xl font-bold"
-              style={{ color: theme.text }}
-            >
-              {coordinates.length}
-            </Text>
+            <Text style={[styles.statValue, { color: theme.text }]}>120 XP</Text>
           </View>
         </View>
 
         <View
-          className="mt-4 flex-1 overflow-hidden rounded-2xl border"
-          style={{ borderColor: theme.border }}
+          style={[
+            styles.mapCard,
+            {
+              borderColor: theme.border,
+            },
+          ]}
         >
-          <ActivityTrackingMap
-            initialCoordinate={initialCoordinate}
-            coordinates={coordinates}
-          />
+          <MapView style={styles.map} initialRegion={initialRegion}>
+            <Polygon
+              coordinates={greenTerritory}
+              strokeColor="rgba(34,197,94,0.35)"
+              fillColor="rgba(34,197,94,0.12)"
+              strokeWidth={1}
+            />
+            <Polygon
+              coordinates={redTerritory}
+              strokeColor="rgba(239,68,68,0.35)"
+              fillColor="rgba(239,68,68,0.10)"
+              strokeWidth={1}
+            />
+            <Polyline
+              coordinates={samplePath}
+              strokeColor={theme.accent}
+              strokeWidth={4}
+            />
+            <Marker coordinate={currentLocation} title="Current Location">
+              <View style={styles.markerOuter}>
+                <View style={styles.markerInner} />
+              </View>
+            </Marker>
+          </MapView>
         </View>
 
-        <View className="mt-5">
-          {!isTracking ? (
-            <NeonButton
-              label="Start Tracking"
-              onPress={() => void startTracking()}
-              variant="primary"
-            />
-          ) : (
-            <NeonButton
-              label="Stop & Review"
-              onPress={stopTracking}
-              variant="primary"
-            />
-          )}
-        </View>
+        <Pressable
+          style={[
+            styles.ctaButton,
+            {
+              borderColor: theme.border,
+              backgroundColor: theme.accent,
+            },
+          ]}
+        >
+          <Text style={[styles.ctaText, { color: theme.background }]}>
+            Start Tracking
+          </Text>
+        </Pressable>
       </View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 20,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 12,
+  },
+  statCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginTop: 6,
+  },
+  mapCard: {
+    flex: 1,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderRadius: 20,
+    marginBottom: 14,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  markerOuter: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(59,130,246,0.24)",
+  },
+  markerInner: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: "#3B82F6",
+  },
+  ctaButton: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+});
