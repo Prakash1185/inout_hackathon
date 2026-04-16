@@ -9,7 +9,10 @@ export default function ProtectedLayout() {
   const { isLoaded, isSignedIn } = useAuth();
   const { theme } = useAppTheme();
   const segments = useSegments();
-  const hasSeenOnboarding = useUiStore((state) => state.hasSeenOnboarding);
+  const hasCompletedOnboardingForUser = useUiStore(
+    (state) => state.hasCompletedOnboardingForUser,
+  );
+  const identity = useAuthStore((state) => state.identity);
   const isBootstrapping = useAuthStore((state) => state.isBootstrapping);
   const hasBootstrapped = useAuthStore((state) => state.hasBootstrapped);
 
@@ -28,7 +31,7 @@ export default function ProtectedLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (isBootstrapping || !hasBootstrapped) {
+  if (isBootstrapping || !hasBootstrapped || !identity?.clerkUserId) {
     return (
       <View
         className="flex-1 items-center justify-center px-6"
@@ -43,8 +46,16 @@ export default function ProtectedLayout() {
   }
 
   const inWelcomeScreen = segments.includes("welcome");
-  if (!hasSeenOnboarding && !inWelcomeScreen) {
+  const hasCompletedOnboarding = hasCompletedOnboardingForUser(
+    identity.clerkUserId,
+  );
+
+  if (!hasCompletedOnboarding && !inWelcomeScreen) {
     return <Redirect href="/(app)/welcome" />;
+  }
+
+  if (hasCompletedOnboarding && inWelcomeScreen) {
+    return <Redirect href="/(app)/(tabs)/home" />;
   }
 
   return (

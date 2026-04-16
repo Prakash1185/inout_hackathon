@@ -22,7 +22,5 @@ export default function Index() {
     );
   }
 
-  return (
-    <Redirect href={isSignedIn ? "/(app)/(tabs)/home" : "/(auth)/login"} />
-  );
+  return <Redirect href={isSignedIn ? "/(app)/welcome" : "/(auth)/login"} />;
 }

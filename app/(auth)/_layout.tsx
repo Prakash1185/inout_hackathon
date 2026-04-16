@@ -20,7 +20,7 @@ export default function AuthLayout() {
   }
 
   if (isSignedIn) {
-    return <Redirect href="/(app)/(tabs)/home" />;
+    return <Redirect href="/(app)/welcome" />;
   }
 
   return (
