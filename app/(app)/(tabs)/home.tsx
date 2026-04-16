@@ -205,7 +205,7 @@ export default function HomeScreen() {
           style={{ borderColor: theme.border, backgroundColor: theme.surface }}
         >
           <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-semibold" style={{ color: theme.text }}>
+            <Text className="text-lg font-semibold" style={{ color: theme.text }}>
               Territory Insight
             </Text>
             <Ionicons name="pulse-outline" size={16} color={theme.textMuted} />
@@ -214,17 +214,21 @@ export default function HomeScreen() {
             {aqiInsight}
           </Text>
 
-          <View className="mt-4 gap-3">
-            <NeonButton
-              label="Start Walk"
-              onPress={() => router.push("/(app)/activity")}
-              variant="primary"
-            />
-            <NeonButton
-              label="View Safe Zones"
-              onPress={() => setActionsOpen(true)}
-              variant="secondary"
-            />
+          <View className="mt-4 flex-row flex-wrap gap-3">
+            <View className="min-w-[140px] flex-1">
+              <NeonButton
+                label="Start Walk"
+                onPress={() => router.push("/(app)/activity")}
+                variant="primary"
+              />
+            </View>
+            <View className="min-w-[140px] flex-1">
+              <NeonButton
+                label="View Safe Zones"
+                onPress={() => setActionsOpen(true)}
+                variant="secondary"
+              />
+            </View>
           </View>
         </View>
 
