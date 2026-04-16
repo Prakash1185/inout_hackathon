@@ -55,6 +55,10 @@ export default function ProtectedLayout() {
       <Stack.Screen name="welcome" />
       <Stack.Screen name="activity/index" />
       <Stack.Screen name="activity/result" />
+      <Stack.Screen name="events/[id]" />
+      <Stack.Screen name="events/host" />
+      <Stack.Screen name="profile/exercises-history" />
+      <Stack.Screen name="profile/badges-earned" />
     </Stack>
   );
 }

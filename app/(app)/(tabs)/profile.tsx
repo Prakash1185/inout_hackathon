@@ -1,14 +1,20 @@
 import { useClerk } from "@clerk/clerk-expo";
+import {
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+} from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useFonts } from "expo-font";
+import { useRouter } from "expo-router";
+import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Modal,
+    Pressable,
+    Text as RNText,
+    ScrollView,
+    TextInput,
+    View,
 } from "react-native";
 
 import { NeonButton } from "@/src/components/NeonButton";
@@ -205,12 +211,26 @@ function formatMetricValue(value: number, metric: ChartMetric) {
 }
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { signOut } = useClerk();
   const { mode, theme, toggleTheme } = useAppTheme();
   const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.user);
   const clearIdentity = useAuthStore((state) => state.clearIdentity);
   const setUser = useAuthStore((state) => state.setUser);
+
+  const [fontsLoaded] = useFonts({
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+  });
+
+  const bodyFontFamily = fontsLoaded ? "Poppins_500Medium" : undefined;
+
+  type ProfileTextProps = ComponentProps<typeof RNText>;
+
+  const Text = ({ style, ...props }: ProfileTextProps) => (
+    <RNText {...props} style={[{ fontFamily: bodyFontFamily }, style]} />
+  );
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
@@ -641,9 +661,13 @@ export default function ProfileScreen() {
           <Text className="text-2xl font-bold" style={{ color: theme.text }}>
             Trainings
           </Text>
-          <Text className="text-xs" style={{ color: theme.textMuted }}>
-            show all
-          </Text>
+          <Pressable
+            onPress={() => router.push("/(app)/profile/exercises-history")}
+          >
+            <Text className="text-xs" style={{ color: theme.textMuted }}>
+              show all
+            </Text>
+          </Pressable>
         </View>
 
         <ScrollView
@@ -701,9 +725,13 @@ export default function ProfileScreen() {
           <Text className="text-2xl font-bold" style={{ color: theme.text }}>
             Badges
           </Text>
-          <Text className="text-xs" style={{ color: theme.textMuted }}>
-            show all
-          </Text>
+          <Pressable
+            onPress={() => router.push("/(app)/profile/badges-earned")}
+          >
+            <Text className="text-xs" style={{ color: theme.textMuted }}>
+              show all
+            </Text>
+          </Pressable>
         </View>
 
         <View className="mt-3 flex-row flex-wrap gap-3">
@@ -828,6 +856,7 @@ export default function ProfileScreen() {
                 borderColor: theme.border,
                 backgroundColor: theme.surfaceMuted,
                 color: theme.text,
+                fontFamily: bodyFontFamily,
               }}
               placeholder="Display name"
               placeholderTextColor={theme.textMuted}
@@ -841,6 +870,7 @@ export default function ProfileScreen() {
                 borderColor: theme.border,
                 backgroundColor: theme.surfaceMuted,
                 color: theme.text,
+                fontFamily: bodyFontFamily,
               }}
               placeholder="Fitness goal"
               placeholderTextColor={theme.textMuted}
