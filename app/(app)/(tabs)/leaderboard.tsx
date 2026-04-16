@@ -24,19 +24,32 @@ interface LeaderboardRow {
   isCurrentUser: boolean;
 }
 
+interface MockLeaderboardUser {
+  rank: number;
+  name: string;
+  areaCovered: number;
+}
+
+const mockLeaderboardData: MockLeaderboardUser[] = [
+  { rank: 1, name: "Aarav Sharma", areaCovered: 31.2 },
+  { rank: 2, name: "Riya Verma", areaCovered: 29.4 },
+  { rank: 3, name: "Kunal Mehta", areaCovered: 27.8 },
+  { rank: 4, name: "Sneha Kapoor", areaCovered: 24.8 },
+  { rank: 5, name: "You", areaCovered: 22.6 },
+  { rank: 6, name: "Arjun Singh", areaCovered: 20.9 },
+  { rank: 7, name: "Neha Joshi", areaCovered: 18.7 },
+  { rank: 8, name: "Rahul Das", areaCovered: 16.4 },
+  { rank: 9, name: "Priya Nair", areaCovered: 14.2 },
+  { rank: 10, name: "Ananya Roy", areaCovered: 12.5 },
+];
+
 function toAreaM2(entry: LeaderboardEntry) {
   return Math.max(0, entry.totalAreaCaptured ?? 0);
 }
 
 function formatAreaKm2(areaM2: number) {
   const km2 = areaM2 / 1_000_000;
-  if (km2 >= 10) {
-    return km2.toFixed(2);
-  }
-  if (km2 >= 1) {
-    return km2.toFixed(3);
-  }
-  return km2.toFixed(4);
+  return km2.toFixed(1);
 }
 
 function getInitial(name: string) {
@@ -66,6 +79,7 @@ export default function LeaderboardScreen() {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [scope, setScope] = useState<RankingScope>("local");
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const fallbackCurrentUserId = currentUserId ?? "__mock_current_user__";
 
   const eventQuery = useQuery({
     queryKey: ["active-event"],
@@ -87,6 +101,24 @@ export default function LeaderboardScreen() {
     () => buildRows(globalQuery.data?.rankings ?? [], currentUserId),
     [currentUserId, globalQuery.data?.rankings],
   );
+
+  const mockRows = useMemo(() => {
+    const sortedMockData = [...mockLeaderboardData]
+      .sort((a, b) => b.areaCovered - a.areaCovered)
+      .map((user, index) => ({ ...user, rank: index + 1 }));
+
+    const mockEntries: LeaderboardEntry[] = sortedMockData.map((user) => ({
+      rank: user.rank,
+      userId:
+        user.name === "You"
+          ? fallbackCurrentUserId
+          : `mock-${user.name.toLowerCase().replace(/\s+/g, "-")}`,
+      name: user.name,
+      totalAreaCaptured: user.areaCovered * 1_000_000,
+    }));
+
+    return buildRows(mockEntries, fallbackCurrentUserId);
+  }, [fallbackCurrentUserId]);
 
   const localRows = useMemo(() => {
     const eventRows = buildRows(
@@ -111,7 +143,12 @@ export default function LeaderboardScreen() {
     return source.slice(start, start + 12);
   }, [currentUserId, eventLeaderboardQuery.data?.rankings, globalRows]);
 
-  const selectedRows = scope === "local" ? localRows : globalRows;
+  const selectedRows =
+    (scope === "local" ? localRows : globalRows).length > 0
+      ? scope === "local"
+        ? localRows
+        : globalRows
+      : mockRows;
 
   const visibleRows = useMemo(() => {
     const topRows = selectedRows.slice(0, 12);
@@ -144,7 +181,7 @@ export default function LeaderboardScreen() {
           Leaderboard
         </Text>
         <Text className="mt-1 text-sm" style={{ color: theme.textMuted }}>
-          Ranked by captured area (km2).
+          Ranked by captured area (km²).
         </Text>
 
         <View
@@ -237,7 +274,7 @@ export default function LeaderboardScreen() {
                         className="mt-1 text-[11px] font-semibold"
                         style={{ color: theme.accent }}
                       >
-                        {formatAreaKm2(winner.areaM2)} km2
+                        {formatAreaKm2(winner.areaM2)} km²
                       </Text>
                     </View>
                   </View>
@@ -325,7 +362,7 @@ export default function LeaderboardScreen() {
                                 backgroundColor: theme.surface,
                               }}
                             >
-                              You
+                              Trending up
                             </Text>
                           ) : null}
                         </View>
@@ -334,7 +371,7 @@ export default function LeaderboardScreen() {
                         className="text-xs font-semibold"
                         style={{ color: theme.text }}
                       >
-                        {formatAreaKm2(entry.areaM2)} km2
+                        {formatAreaKm2(entry.areaM2)} km²
                       </Text>
                     </View>
 
