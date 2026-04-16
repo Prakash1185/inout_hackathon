@@ -31,23 +31,27 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="feed"
+        options={{
+          title: "Feed",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="newspaper" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="leaderboard"
         options={{
-          title: "Rankings",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy" color={color} size={size} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
-          title: "Events",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" color={color} size={size} />
-          ),
+          href: null,
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
