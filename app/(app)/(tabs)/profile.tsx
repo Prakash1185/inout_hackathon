@@ -228,7 +228,7 @@ function formatActivityTimeLabel(raw: string) {
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut } = useClerk();
-  const { mode, theme, toggleTheme } = useAppTheme();
+  const { theme } = useAppTheme();
   const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.user);
   const clearIdentity = useAuthStore((state) => state.clearIdentity);
@@ -317,20 +317,7 @@ export default function ProfileScreen() {
           <Text className="text-[30px] font-bold" style={{ color: theme.text }}>
             Profile
           </Text>
-          <Pressable
-            onPress={toggleTheme}
-            className="rounded-2xl border p-2"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surface,
-            }}
-          >
-            <Ionicons
-              name={mode === "dark" ? "sunny-outline" : "moon-outline"}
-              size={18}
-              color={theme.text}
-            />
-          </Pressable>
+          <View className="h-10 w-10" />
         </View>
 
         <View

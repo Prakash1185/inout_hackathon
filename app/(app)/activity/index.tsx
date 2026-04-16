@@ -3,14 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-    Alert,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    View
-} from "react-native";
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Coordinate } from "@/shared/types";
 import { Screen } from "@/src/components/Screen";
@@ -455,14 +448,7 @@ export default function ActivityTrackingScreen() {
               styles.backButton,
               { borderColor: theme.border, backgroundColor: theme.surface },
             ]}
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-                return;
-              }
-
-              router.push("/(app)/(tabs)/home");
-            }}
+            onPress={() => router.replace("/(app)/(tabs)/home")}
           >
             <Ionicons name="chevron-back" size={18} color={theme.text} />
           </Pressable>
