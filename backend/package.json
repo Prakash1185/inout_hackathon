@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Terranova backend API",
+  "description": "Velora backend API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx src/server.ts",

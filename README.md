@@ -1,4 +1,4 @@
-# Terranova - Gamified Activity Tracking (Expo + Node)
+# Velora - Gamified Activity Tracking (Expo + Node)
 
 Production-style foundation for a real-world activity competition app inspired by INTVL, Duolingo, and Strava.
 

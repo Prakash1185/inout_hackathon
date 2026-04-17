@@ -46,7 +46,7 @@ export const useUiStore = create<UiState>()(
         get().seenOnboardingUserIds.includes(userId),
     }),
     {
-      name: "terranova-ui-store",
+      name: "velora-ui-store",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         themeMode: state.themeMode,

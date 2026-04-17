@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Terranova",
-    "slug": "terranova",
+    "name": "Velora",
+    "slug": "velora",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "terranova",
+    "scheme": "velora",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Terranova uses your location to track activities and map captured territory."
+        "NSLocationWhenInUseUsageDescription": "Velora uses your location to track activities and map captured territory."
       }
     },
     "android": {
