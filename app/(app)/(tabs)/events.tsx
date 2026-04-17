@@ -68,7 +68,7 @@ const missions = [
   },
 ];
 
-export default function EventsScreen() {
+export function EventsPanel() {
   const router = useRouter();
   const { theme } = useAppTheme();
 
@@ -88,7 +88,7 @@ export default function EventsScreen() {
   );
 
   return (
-    <Screen>
+    <>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 16, paddingBottom: 38 }}
@@ -484,6 +484,14 @@ export default function EventsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+    </>
+  );
+}
+
+export default function EventsScreen() {
+  return (
+    <Screen>
+      <EventsPanel />
     </Screen>
   );
 }

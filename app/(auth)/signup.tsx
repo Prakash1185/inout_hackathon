@@ -39,7 +39,7 @@ export default function SignUpScreen() {
       }
 
       await setActive({ session: createdSessionId });
-      router.replace("/(app)/(tabs)/home");
+      router.replace("/(app)/welcome");
     } catch {
       setError("Google sign up failed. Please try again.");
     } finally {

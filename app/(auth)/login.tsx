@@ -37,7 +37,7 @@ export default function LoginScreen() {
       }
 
       await setActive({ session: createdSessionId });
-      router.replace("/(app)/(tabs)/home");
+      router.replace("/(app)/welcome");
     } catch {
       setError("Google sign in failed. Please try again.");
     } finally {

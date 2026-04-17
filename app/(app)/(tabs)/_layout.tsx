@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
 import { useAppTheme } from "@/src/store/ui-store";
@@ -13,10 +13,20 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: theme.surface,
           borderTopColor: theme.border,
-          height: 64,
-          paddingTop: 6,
-          paddingBottom: 8,
+          borderTopWidth: 0.8,
+          height: 66,
+          paddingTop: 2,
+          paddingBottom: 9,
         },
+        tabBarItemStyle: {
+          borderRadius: "100%",
+          marginHorizontal: 2,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+        },
+        // tabBarActiveBackgroundColor: theme.surfaceMuted,
         tabBarActiveTintColor: theme.accent,
         tabBarInactiveTintColor: theme.textMuted,
       }}
@@ -26,34 +36,57 @@ export default function TabsLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map" color={color} size={size} />
+            <Ionicons name="home" color={color} size={size} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="feed"
+        options={{
+          title: "Feed",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="newspaper" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ai-trainer"
+        options={{
+          title: "AI Trainer",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="sparkles" color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
-          title: "Rankings",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy" color={color} size={size} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
-          title: "Events",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" color={color} size={size} />
-          ),
+          href: null,
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="start"
+        options={{
+          title: "Start",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome6 name="person-walking" color={color} size={size} />
           ),
         }}
       />

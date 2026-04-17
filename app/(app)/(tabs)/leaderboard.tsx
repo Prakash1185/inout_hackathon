@@ -1,14 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, Text, View } from "react-native";
+import {
+    Animated,
+    Easing,
+    Pressable,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
 
 import type { LeaderboardEntry } from "@/shared/types";
 import { Screen } from "@/src/components/Screen";
 import { getActiveEvent } from "@/src/services/event.service";
 import {
-  getEventLeaderboard,
-  getGlobalLeaderboard,
+    getEventLeaderboard,
+    getGlobalLeaderboard,
 } from "@/src/services/leaderboard.service";
 import { useAuthStore } from "@/src/store/auth-store";
 import { useAppTheme } from "@/src/store/ui-store";
@@ -74,7 +81,7 @@ function buildRows(entries: LeaderboardEntry[], currentUserId?: string | null) {
   });
 }
 
-export default function LeaderboardScreen() {
+export function LeaderboardPanel() {
   const { theme } = useAppTheme();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [scope, setScope] = useState<RankingScope>("local");
@@ -172,247 +179,259 @@ export default function LeaderboardScreen() {
   }, [progressAnim, scope, selectedRows.length]);
 
   return (
-    <Screen>
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
-      >
-        <Text className="text-[30px] font-bold" style={{ color: theme.text }}>
-          Leaderboard
-        </Text>
-        <Text className="mt-1 text-sm" style={{ color: theme.textMuted }}>
-          Ranked by captured area (km²).
-        </Text>
+    <ScrollView
+      className="flex-1"
+      contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
+    >
+      <Text className="text-[30px] font-bold" style={{ color: theme.text }}>
+        Leaderboard
+      </Text>
+      <Text className="mt-1 text-sm" style={{ color: theme.textMuted }}>
+        Ranked by captured area (km²).
+      </Text>
 
-        <View
-          className="mt-4 self-start rounded-2xl border p-1"
-          style={{
-            borderColor: theme.border,
-            backgroundColor: theme.surface,
-          }}
-        >
-          <View className="flex-row">
-            {(["local", "global"] as const).map((option) => {
-              const active = scope === option;
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => setScope(option)}
-                  className="rounded-2xl px-4 py-1.5"
+      <View
+        className="mt-4 self-start rounded-2xl border p-1"
+        style={{
+          borderColor: theme.border,
+          backgroundColor: theme.surface,
+        }}
+      >
+        <View className="flex-row">
+          {(["local", "global"] as const).map((option) => {
+            const active = scope === option;
+            return (
+              <Pressable
+                key={option}
+                onPress={() => setScope(option)}
+                className="rounded-2xl px-4 py-1.5"
+                style={{
+                  backgroundColor: active ? theme.accent : "transparent",
+                }}
+              >
+                <Text
+                  className="text-xs font-semibold capitalize"
                   style={{
-                    backgroundColor: active ? theme.accent : "transparent",
+                    color: active ? theme.background : theme.textMuted,
                   }}
                 >
-                  <Text
-                    className="text-xs font-semibold capitalize"
-                    style={{
-                      color: active ? theme.background : theme.textMuted,
-                    }}
-                  >
-                    {option}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                  {option}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
+      </View>
 
-        <View
-          className="mt-4 rounded-2xl border p-4"
-          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-        >
-          <View className="flex-row items-end justify-between">
-            {[1, 0, 2]
-              .map((index) => podiumRows[index])
-              .filter(Boolean)
-              .map((winner, index) => {
-                if (!winner) {
-                  return null;
-                }
-                const isFirst = winner.rank === 1;
-                return (
-                  <View
-                    key={winner.userId}
-                    className="flex-1 rounded-2xl border px-2 py-3"
-                    style={{
-                      borderColor: isFirst ? theme.accent : theme.border,
-                      backgroundColor: theme.surfaceMuted,
-                      marginTop: isFirst ? 0 : 12,
-                      marginHorizontal: index === 1 ? 6 : 0,
-                    }}
-                  >
-                    <View className="items-center">
-                      <View
-                        className="items-center justify-center rounded-full"
+      <View
+        className="mt-4 rounded-2xl border p-4"
+        style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+      >
+        <View className="flex-row items-end justify-between">
+          {[1, 0, 2]
+            .map((index) => podiumRows[index])
+            .filter(Boolean)
+            .map((winner, index) => {
+              if (!winner) {
+                return null;
+              }
+              const isFirst = winner.rank === 1;
+              return (
+                <View
+                  key={winner.userId}
+                  className="flex-1 rounded-2xl border px-2 py-3"
+                  style={{
+                    borderColor: isFirst ? theme.accent : theme.border,
+                    backgroundColor: theme.surfaceMuted,
+                    marginTop: isFirst ? 0 : 12,
+                    marginHorizontal: index === 1 ? 6 : 0,
+                  }}
+                >
+                  <View className="items-center">
+                    <View
+                      className="items-center justify-center rounded-full"
+                      style={{
+                        backgroundColor: theme.surface,
+                        height: isFirst ? 44 : 36,
+                        width: isFirst ? 44 : 36,
+                      }}
+                    >
+                      <Text
+                        className="font-semibold"
                         style={{
-                          backgroundColor: theme.surface,
-                          height: isFirst ? 44 : 36,
-                          width: isFirst ? 44 : 36,
+                          color: theme.text,
+                          fontSize: isFirst ? 14 : 12,
                         }}
                       >
-                        <Text
-                          className="font-semibold"
-                          style={{ color: theme.text, fontSize: isFirst ? 14 : 12 }}
-                        >
-                          {getInitial(winner.name)}
-                        </Text>
-                      </View>
-                      <Text
-                        className="mt-2 text-[11px] font-semibold"
-                        style={{ color: theme.text }}
-                        numberOfLines={1}
-                      >
-                        {winner.name}
-                      </Text>
-                      <Text
-                        className="mt-1 text-[10px]"
-                        style={{ color: theme.textMuted }}
-                      >
-                        #{winner.rank}
-                      </Text>
-                      <Text
-                        className="mt-1 text-[11px] font-semibold"
-                        style={{ color: theme.accent }}
-                      >
-                        {formatAreaKm2(winner.areaM2)} km²
+                        {getInitial(winner.name)}
                       </Text>
                     </View>
+                    <Text
+                      className="mt-2 text-[11px] font-semibold"
+                      style={{ color: theme.text }}
+                      numberOfLines={1}
+                    >
+                      {winner.name}
+                    </Text>
+                    <Text
+                      className="mt-1 text-[10px]"
+                      style={{ color: theme.textMuted }}
+                    >
+                      #{winner.rank}
+                    </Text>
+                    <Text
+                      className="mt-1 text-[11px] font-semibold"
+                      style={{ color: theme.accent }}
+                    >
+                      {formatAreaKm2(winner.areaM2)} km²
+                    </Text>
                   </View>
-                );
-              })}
+                </View>
+              );
+            })}
+        </View>
+      </View>
+
+      <View
+        className="mt-4 rounded-2xl border p-4"
+        style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+      >
+        <View className="flex-row items-center justify-between">
+          <Text className="text-lg font-semibold" style={{ color: theme.text }}>
+            Rankings
+          </Text>
+          <View className="flex-row items-center gap-1">
+            <Ionicons
+              name="location-outline"
+              size={13}
+              color={theme.textMuted}
+            />
+            <Text className="text-[11px]" style={{ color: theme.textMuted }}>
+              {eventQuery.data?.location ?? "Live updates"}
+            </Text>
           </View>
         </View>
 
-        <View
-          className="mt-4 rounded-2xl border p-4"
-          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-        >
-          <View className="flex-row items-center justify-between">
-            <Text className="text-lg font-semibold" style={{ color: theme.text }}>
-              Rankings
-            </Text>
-            <View className="flex-row items-center gap-1">
-              <Ionicons
-                name="location-outline"
-                size={13}
-                color={theme.textMuted}
-              />
-              <Text className="text-[11px]" style={{ color: theme.textMuted }}>
-                {eventQuery.data?.location ?? "Live updates"}
-              </Text>
-            </View>
-          </View>
+        <View className="mt-4 gap-2">
+          {visibleRows.length ? (
+            visibleRows.map((entry) => {
+              const barWidth = progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [
+                  "0%",
+                  `${Math.max(8, Math.round(entry.progress * 100))}%`,
+                ],
+              });
 
-          <View className="mt-4 gap-2">
-            {visibleRows.length ? (
-              visibleRows.map((entry) => {
-                const barWidth = progressAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [
-                    "0%",
-                    `${Math.max(8, Math.round(entry.progress * 100))}%`,
-                  ],
-                });
-
-                return (
-                  <View
-                    key={`${entry.userId}-${entry.rank}-${scope}`}
-                    className="rounded-2xl border px-3 py-3"
-                    style={{
-                      borderColor: entry.isCurrentUser ? theme.accent : theme.border,
-                      backgroundColor: entry.isCurrentUser
-                        ? theme.surfaceMuted
-                        : theme.surface,
-                    }}
-                  >
-                    <View className="flex-row items-center">
-                      <Text
-                        className="w-7 text-xs font-semibold"
-                        style={{
-                          color: entry.isCurrentUser ? theme.accent : theme.textMuted,
-                        }}
-                      >
-                        {entry.rank}
-                      </Text>
-                      <View
-                        className="h-8 w-8 items-center justify-center rounded-full"
-                        style={{ backgroundColor: theme.surfaceMuted }}
-                      >
-                        <Text
-                          className="text-xs font-semibold"
-                          style={{ color: theme.text }}
-                        >
-                          {getInitial(entry.name)}
-                        </Text>
-                      </View>
-                      <View className="ml-3 flex-1">
-                        <View className="flex-row items-center gap-2">
-                          <Text
-                            className="text-sm font-semibold"
-                            style={{ color: theme.text }}
-                            numberOfLines={1}
-                          >
-                            {entry.name}
-                          </Text>
-                          {entry.isCurrentUser ? (
-                            <Text
-                              className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                              style={{
-                                color: theme.accent,
-                                backgroundColor: theme.surface,
-                              }}
-                            >
-                              Trending up
-                            </Text>
-                          ) : null}
-                        </View>
-                      </View>
+              return (
+                <View
+                  key={`${entry.userId}-${entry.rank}-${scope}`}
+                  className="rounded-2xl border px-3 py-3"
+                  style={{
+                    borderColor: entry.isCurrentUser
+                      ? theme.accent
+                      : theme.border,
+                    backgroundColor: entry.isCurrentUser
+                      ? theme.surfaceMuted
+                      : theme.surface,
+                  }}
+                >
+                  <View className="flex-row items-center">
+                    <Text
+                      className="w-7 text-xs font-semibold"
+                      style={{
+                        color: entry.isCurrentUser
+                          ? theme.accent
+                          : theme.textMuted,
+                      }}
+                    >
+                      {entry.rank}
+                    </Text>
+                    <View
+                      className="h-8 w-8 items-center justify-center rounded-full"
+                      style={{ backgroundColor: theme.surfaceMuted }}
+                    >
                       <Text
                         className="text-xs font-semibold"
                         style={{ color: theme.text }}
                       >
-                        {formatAreaKm2(entry.areaM2)} km²
+                        {getInitial(entry.name)}
                       </Text>
                     </View>
-
-                    <View
-                      className="mt-2 h-1.5 overflow-hidden rounded-full"
-                      style={{ backgroundColor: theme.surfaceMuted }}
-                    >
-                      <Animated.View
-                        className="h-1.5 rounded-full"
-                        style={{
-                          width: barWidth,
-                          backgroundColor: theme.accent,
-                          opacity: 0.88,
-                        }}
-                      />
+                    <View className="ml-3 flex-1">
+                      <View className="flex-row items-center gap-2">
+                        <Text
+                          className="text-sm font-semibold"
+                          style={{ color: theme.text }}
+                          numberOfLines={1}
+                        >
+                          {entry.name}
+                        </Text>
+                        {entry.isCurrentUser ? (
+                          <Text
+                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                            style={{
+                              color: theme.accent,
+                              backgroundColor: theme.surface,
+                            }}
+                          >
+                            Trending up
+                          </Text>
+                        ) : null}
+                      </View>
                     </View>
+                    <Text
+                      className="text-xs font-semibold"
+                      style={{ color: theme.text }}
+                    >
+                      {formatAreaKm2(entry.areaM2)} km²
+                    </Text>
                   </View>
-                );
-              })
-            ) : (
-              <Text className="text-sm" style={{ color: theme.textMuted }}>
-                No ranking activity yet.
-              </Text>
-            )}
-          </View>
-        </View>
 
-        <Pressable
-          className="mt-5 rounded-2xl border py-3"
-          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-          onPress={() => undefined}
+                  <View
+                    className="mt-2 h-1.5 overflow-hidden rounded-full"
+                    style={{ backgroundColor: theme.surfaceMuted }}
+                  >
+                    <Animated.View
+                      className="h-1.5 rounded-full"
+                      style={{
+                        width: barWidth,
+                        backgroundColor: theme.accent,
+                        opacity: 0.88,
+                      }}
+                    />
+                  </View>
+                </View>
+              );
+            })
+          ) : (
+            <Text className="text-sm" style={{ color: theme.textMuted }}>
+              No ranking activity yet.
+            </Text>
+          )}
+        </View>
+      </View>
+
+      <Pressable
+        className="mt-5 rounded-2xl border py-3"
+        style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+        onPress={() => undefined}
+      >
+        <Text
+          className="text-center text-sm font-semibold"
+          style={{ color: theme.text }}
         >
-          <Text
-            className="text-center text-sm font-semibold"
-            style={{ color: theme.text }}
-          >
-            View Full Rankings
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </Screen>
+          View Full Rankings
+        </Text>
+      </Pressable>
+    </ScrollView>
   );
 }
 
+export default function LeaderboardScreen() {
+  return (
+    <Screen>
+      <LeaderboardPanel />
+    </Screen>
+  );
+}

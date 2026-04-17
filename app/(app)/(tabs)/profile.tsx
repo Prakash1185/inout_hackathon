@@ -1,7 +1,7 @@
 import { useClerk } from "@clerk/clerk-expo";
 import {
-    Poppins_500Medium,
-    Poppins_600SemiBold,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
 } from "@expo-google-fonts/poppins";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,18 +9,23 @@ import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import {
-    Modal,
-    Pressable,
-    Text as RNText,
-    ScrollView,
-    TextInput,
-    View,
+  Modal,
+  Pressable,
+  Text as RNText,
+  ScrollView,
+  TextInput,
+  View,
 } from "react-native";
 
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
+import { getUserActivities } from "@/src/services/activity.service";
 import { getMyProfile, updateProfile } from "@/src/services/user.service";
 import { useAuthStore } from "@/src/store/auth-store";
+import {
+  useOnboardingStore,
+  type OnboardingGender,
+} from "@/src/store/onboarding-store";
 import { useAppTheme } from "@/src/store/ui-store";
 
 type PeriodKey = "7D" | "30D" | "90D";
@@ -193,6 +198,13 @@ const healthIndicators = [
   },
 ];
 
+const profileGenderOptions: OnboardingGender[] = [
+  "Male",
+  "Female",
+  "Non-binary",
+  "Prefer not to say",
+];
+
 function getMetricValue(item: WeeklyStat, metric: ChartMetric) {
   return item[metric];
 }
@@ -210,14 +222,39 @@ function formatMetricValue(value: number, metric: ChartMetric) {
   return `${Math.round(value).toLocaleString()} kcal`;
 }
 
+function formatActivityTimeLabel(raw: string) {
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Recently";
+  }
+
+  return parsed.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function parsePositiveInteger(value: string): number | null {
+  const parsed = Number(value.trim());
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return Math.round(parsed);
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut } = useClerk();
-  const { mode, theme, toggleTheme } = useAppTheme();
+  const { theme } = useAppTheme();
   const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.user);
   const clearIdentity = useAuthStore((state) => state.clearIdentity);
   const setUser = useAuthStore((state) => state.setUser);
+  const onboardingProfile = useOnboardingStore((state) => state.profile);
+  const setOnboardingProfile = useOnboardingStore((state) => state.setProfile);
 
   const [fontsLoaded] = useFonts({
     Poppins_500Medium,
@@ -238,11 +275,31 @@ export default function ProfileScreen() {
     initialData: authUser ?? undefined,
   });
 
+  const activitiesQuery = useQuery({
+    queryKey: ["my-activities"],
+    queryFn: getUserActivities,
+  });
+
   const [period, setPeriod] = useState<PeriodKey>("7D");
   const [chartMetric, setChartMetric] = useState<ChartMetric>("calories");
   const [name, setName] = useState("");
-  const [goal, setGoal] = useState("Build lean strength and consistency");
   const [editOpen, setEditOpen] = useState(false);
+  const [personalDetailsOpen, setPersonalDetailsOpen] = useState(false);
+  const [personalGoal, setPersonalGoal] = useState(
+    onboardingProfile?.goal ?? "Stay active daily",
+  );
+  const [personalAge, setPersonalAge] = useState(
+    onboardingProfile?.age ? String(onboardingProfile.age) : "",
+  );
+  const [personalHeightCm, setPersonalHeightCm] = useState(
+    onboardingProfile?.heightCm ? String(onboardingProfile.heightCm) : "",
+  );
+  const [personalWeightKg, setPersonalWeightKg] = useState(
+    onboardingProfile?.weightKg ? String(onboardingProfile.weightKg) : "",
+  );
+  const [personalGender, setPersonalGender] = useState<OnboardingGender>(
+    onboardingProfile?.gender ?? "Prefer not to say",
+  );
   const [selectedBadge, setSelectedBadge] = useState<BadgeInfo | null>(null);
 
   const profile = profileQuery.data ?? authUser ?? demoProfile;
@@ -250,6 +307,18 @@ export default function ProfileScreen() {
   useEffect(() => {
     setName(profile.name);
   }, [profile.name]);
+
+  useEffect(() => {
+    setPersonalGoal(onboardingProfile?.goal ?? "Stay active daily");
+    setPersonalAge(onboardingProfile?.age ? String(onboardingProfile.age) : "");
+    setPersonalHeightCm(
+      onboardingProfile?.heightCm ? String(onboardingProfile.heightCm) : "",
+    );
+    setPersonalWeightKg(
+      onboardingProfile?.weightKg ? String(onboardingProfile.weightKg) : "",
+    );
+    setPersonalGender(onboardingProfile?.gender ?? "Prefer not to say");
+  }, [onboardingProfile]);
 
   const updateMutation = useMutation({
     mutationFn: updateProfile,
@@ -285,6 +354,123 @@ export default function ProfileScreen() {
 
   const nextLevelXp = profile.nextLevelXp ?? profile.xp + 300;
   const levelProgress = Math.min(1, profile.xp / Math.max(nextLevelXp, 1));
+  const recentWalks = activitiesQuery.data?.slice(0, 4) ?? [];
+  const bmiValue = useMemo(() => {
+    if (!onboardingProfile) {
+      return null;
+    }
+
+    const heightMeters = onboardingProfile.heightCm / 100;
+    if (!heightMeters) {
+      return null;
+    }
+
+    return onboardingProfile.weightKg / (heightMeters * heightMeters);
+  }, [onboardingProfile]);
+
+  const bmiLabel = useMemo(() => {
+    if (bmiValue === null) {
+      return "--";
+    }
+
+    if (bmiValue < 18.5) {
+      return "Underweight";
+    }
+    if (bmiValue < 25) {
+      return "Healthy";
+    }
+    if (bmiValue < 30) {
+      return "Overweight";
+    }
+    return "High";
+  }, [bmiValue]);
+
+  const onboardingDetailCards = useMemo(() => {
+    if (!onboardingProfile) {
+      return [];
+    }
+
+    return [
+      {
+        label: "Age",
+        value: `${onboardingProfile.age} yrs`,
+        icon: "calendar-outline" as IconName,
+      },
+      {
+        label: "Gender",
+        value: onboardingProfile.gender,
+        icon: "person-outline" as IconName,
+      },
+      {
+        label: "Height",
+        value: `${onboardingProfile.heightCm} cm`,
+        icon: "resize-outline" as IconName,
+      },
+      {
+        label: "Weight",
+        value: `${onboardingProfile.weightKg} kg`,
+        icon: "barbell-outline" as IconName,
+      },
+      {
+        label: "BMI",
+        value:
+          bmiValue === null ? "--" : `${bmiValue.toFixed(1)} (${bmiLabel})`,
+        icon: "analytics-outline" as IconName,
+      },
+      {
+        label: "Goal",
+        value: `${onboardingProfile?.goal ?? "Stay active daily"}`,
+        icon: "golf-sharp" as IconName,
+      },
+    ];
+  }, [bmiLabel, bmiValue, onboardingProfile]);
+
+  function openPersonalDetailsEditor() {
+    setPersonalGoal(onboardingProfile?.goal ?? "Stay active daily");
+    setPersonalAge(onboardingProfile?.age ? String(onboardingProfile.age) : "");
+    setPersonalHeightCm(
+      onboardingProfile?.heightCm ? String(onboardingProfile.heightCm) : "",
+    );
+    setPersonalWeightKg(
+      onboardingProfile?.weightKg ? String(onboardingProfile.weightKg) : "",
+    );
+    setPersonalGender(onboardingProfile?.gender ?? "Prefer not to say");
+    setPersonalDetailsOpen(true);
+  }
+
+  function savePersonalDetails() {
+    const age = parsePositiveInteger(personalAge);
+    const heightCm = parsePositiveInteger(personalHeightCm);
+    const weightKg = parsePositiveInteger(personalWeightKg);
+    const goalText = personalGoal.trim();
+
+    if (!age || age < 10 || age > 99) {
+      return;
+    }
+
+    if (!heightCm || heightCm < 80 || heightCm > 260) {
+      return;
+    }
+
+    if (!weightKg || weightKg < 25 || weightKg > 350) {
+      return;
+    }
+
+    if (goalText.length < 3) {
+      return;
+    }
+
+    setOnboardingProfile({
+      name: onboardingProfile?.name ?? profile.name,
+      age,
+      gender: personalGender,
+      heightCm,
+      weightKg,
+      goal: goalText,
+    });
+
+    setPersonalDetailsOpen(false);
+  }
 
   return (
     <Screen>
@@ -296,20 +482,7 @@ export default function ProfileScreen() {
           <Text className="text-[30px] font-bold" style={{ color: theme.text }}>
             Profile
           </Text>
-          <Pressable
-            onPress={toggleTheme}
-            className="rounded-2xl border p-2"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surface,
-            }}
-          >
-            <Ionicons
-              name={mode === "dark" ? "sunny-outline" : "moon-outline"}
-              size={18}
-              color={theme.text}
-            />
-          </Pressable>
+          <View className="h-10 w-10" />
         </View>
 
         <View
@@ -659,6 +832,96 @@ export default function ProfileScreen() {
 
         <View className="mt-6 flex-row items-center justify-between">
           <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+            Walking Activity Log
+          </Text>
+          <Pressable
+            onPress={() => router.push("/(app)/profile/exercises-history")}
+          >
+            <Text className="text-xs" style={{ color: theme.textMuted }}>
+              show all
+            </Text>
+          </Pressable>
+        </View>
+
+        {activitiesQuery.isLoading ? (
+          <View
+            className="mt-3 rounded-2xl border p-4"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text className="text-sm" style={{ color: theme.textMuted }}>
+              Loading recent walks...
+            </Text>
+          </View>
+        ) : null}
+
+        {!activitiesQuery.isLoading && recentWalks.length === 0 ? (
+          <View
+            className="mt-3 rounded-2xl border p-4"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text className="text-sm" style={{ color: theme.textMuted }}>
+              No walk logs yet. Complete a tracked walk to populate this list.
+            </Text>
+          </View>
+        ) : null}
+
+        {!activitiesQuery.isLoading && recentWalks.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mt-3"
+            contentContainerStyle={{ gap: 10, paddingRight: 8 }}
+          >
+            {recentWalks.map((item) => (
+              <View
+                key={item.id}
+                className="w-64 rounded-2xl border p-3"
+                style={{
+                  borderColor: theme.border,
+                  backgroundColor: theme.surface,
+                }}
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    {item.distance.toFixed(2)} km walk
+                  </Text>
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{ color: theme.accent }}
+                  >
+                    +{item.xpEarned} XP
+                  </Text>
+                </View>
+
+                <Text
+                  className="mt-1 text-xs"
+                  style={{ color: theme.textMuted }}
+                >
+                  Captured {item.areaCaptured.toFixed(0)} m2
+                </Text>
+
+                <Text
+                  className="mt-2 text-[11px]"
+                  style={{ color: theme.textMuted }}
+                >
+                  {formatActivityTimeLabel(item.createdAt)}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        ) : null}
+
+        <View className="mt-6 flex-row items-center justify-between">
+          <Text className="text-2xl font-bold" style={{ color: theme.text }}>
             Trainings
           </Text>
           <Pressable
@@ -794,17 +1057,99 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        <View
-          className="mt-6 rounded-2xl border p-4"
-          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-        >
-          <Text className="text-sm font-semibold" style={{ color: theme.text }}>
-            Current goal
+        <View className="mt-6 flex-row items-center justify-between">
+          <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+            Personal Details
           </Text>
-          <Text className="mt-1 text-xs" style={{ color: theme.textMuted }}>
-            {goal}
-          </Text>
+          <Pressable
+            onPress={openPersonalDetailsEditor}
+            className="rounded-2xl border px-3 py-2"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surfaceMuted,
+            }}
+          >
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: theme.text }}
+            >
+              Edit
+            </Text>
+          </Pressable>
         </View>
+
+        {onboardingProfile ? (
+          <View
+            className="mt-3 rounded-2xl border p-5"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <View className="flex-row flex-wrap gap-3">
+              {onboardingDetailCards.map((item) => (
+                <View
+                  key={item.label}
+                  className="w-[48%] rounded-2xl border px-4 py-4"
+                  style={{
+                    borderColor: theme.border,
+                    backgroundColor: theme.surfaceMuted,
+                  }}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Ionicons
+                      name={item.icon}
+                      size={14}
+                      color={theme.textMuted}
+                    />
+                    <Text
+                      className="text-[11px]"
+                      style={{ color: theme.textMuted }}
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
+                  <Text
+                    className="mt-3 text-base font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    {item.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            {/* <View
+              className="mt-4 rounded-2xl border px-4 py-4"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.surfaceMuted,
+              }}
+            >
+              <Text className="text-[11px]" style={{ color: theme.textMuted }}>
+                Goal
+              </Text>
+              <Text
+                className="mt-2 text-sm leading-6"
+                style={{ color: theme.text }}
+              >
+                {onboardingProfile.goal}
+              </Text>
+            </View> */}
+          </View>
+        ) : (
+          <View
+            className="mt-3 rounded-2xl border p-4"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text className="text-sm" style={{ color: theme.textMuted }}>
+              Add your personal details to personalize your fitness plan.
+            </Text>
+          </View>
+        )}
 
         <Pressable
           className="mt-6 rounded-2xl border py-3"
@@ -845,7 +1190,7 @@ export default function ProfileScreen() {
               Edit Profile
             </Text>
             <Text className="mt-1 text-xs" style={{ color: theme.textMuted }}>
-              Keep your public profile and goals updated.
+              Keep your public profile updated.
             </Text>
 
             <TextInput
@@ -862,9 +1207,124 @@ export default function ProfileScreen() {
               placeholderTextColor={theme.textMuted}
             />
 
+            <View className="mt-4">
+              <NeonButton
+                label={updateMutation.isPending ? "Saving..." : "Save Changes"}
+                onPress={() => {
+                  updateMutation.mutate({ name: name.trim() || profile.name });
+                  setEditOpen(false);
+                }}
+                variant="primary"
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={personalDetailsOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPersonalDetailsOpen(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end"
+          style={{ backgroundColor: "rgba(0,0,0,0.25)" }}
+          onPress={() => setPersonalDetailsOpen(false)}
+        >
+          <Pressable
+            className="rounded-t-2xl border px-5 pb-6 pt-5"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+            onPress={() => undefined}
+          >
+            <Text
+              className="text-lg font-semibold"
+              style={{ color: theme.text }}
+            >
+              Edit Personal Details
+            </Text>
+            <Text className="mt-1 text-xs" style={{ color: theme.textMuted }}>
+              Update your health details for better recommendations.
+            </Text>
+
             <TextInput
-              value={goal}
-              onChangeText={setGoal}
+              value={personalAge}
+              onChangeText={setPersonalAge}
+              className="mt-4 rounded-2xl border px-4 py-3"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.surfaceMuted,
+                color: theme.text,
+                fontFamily: bodyFontFamily,
+              }}
+              placeholder="Age"
+              placeholderTextColor={theme.textMuted}
+              keyboardType="number-pad"
+            />
+
+            <View className="mt-3 flex-row flex-wrap gap-2">
+              {profileGenderOptions.map((option) => {
+                const active = personalGender === option;
+
+                return (
+                  <Pressable
+                    key={option}
+                    className="rounded-2xl border px-3 py-2"
+                    style={{
+                      borderColor: active ? theme.accent : theme.border,
+                      backgroundColor: active
+                        ? theme.accent
+                        : theme.surfaceMuted,
+                    }}
+                    onPress={() => setPersonalGender(option)}
+                  >
+                    <Text
+                      className="text-xs font-semibold"
+                      style={{ color: active ? "#FFFFFF" : theme.text }}
+                    >
+                      {option}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <TextInput
+              value={personalHeightCm}
+              onChangeText={setPersonalHeightCm}
+              className="mt-3 rounded-2xl border px-4 py-3"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.surfaceMuted,
+                color: theme.text,
+                fontFamily: bodyFontFamily,
+              }}
+              placeholder="Height (cm)"
+              placeholderTextColor={theme.textMuted}
+              keyboardType="number-pad"
+            />
+
+            <TextInput
+              value={personalWeightKg}
+              onChangeText={setPersonalWeightKg}
+              className="mt-3 rounded-2xl border px-4 py-3"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.surfaceMuted,
+                color: theme.text,
+                fontFamily: bodyFontFamily,
+              }}
+              placeholder="Weight (kg)"
+              placeholderTextColor={theme.textMuted}
+              keyboardType="number-pad"
+            />
+
+            <TextInput
+              value={personalGoal}
+              onChangeText={setPersonalGoal}
               className="mt-3 rounded-2xl border px-4 py-3"
               style={{
                 borderColor: theme.border,
@@ -874,15 +1334,13 @@ export default function ProfileScreen() {
               }}
               placeholder="Fitness goal"
               placeholderTextColor={theme.textMuted}
+              multiline
             />
 
             <View className="mt-4">
               <NeonButton
-                label={updateMutation.isPending ? "Saving..." : "Save Changes"}
-                onPress={() => {
-                  updateMutation.mutate({ name: name.trim() || profile.name });
-                  setEditOpen(false);
-                }}
+                label="Save Personal Details"
+                onPress={savePersonalDetails}
                 variant="primary"
               />
             </View>
