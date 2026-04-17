@@ -3,21 +3,29 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
 import type { Coordinate } from "@/shared/types";
 import { Screen } from "@/src/components/Screen";
 import {
-    createActivity,
-    getMapOverview,
+  createActivity,
+  getMapOverview,
 } from "@/src/services/activity.service";
 import { getActiveEvent } from "@/src/services/event.service";
 import { useActivityStore } from "@/src/store/activity-store";
 import { useAuthStore } from "@/src/store/auth-store";
 import { useAppTheme } from "@/src/store/ui-store";
 import {
-    approximatePolygonAreaSqMeters,
-    calculateDistanceKm,
+  approximatePolygonAreaSqMeters,
+  calculateDistanceKm,
 } from "@/src/utils/geo";
 import { ActivityTrackingMap } from "../../../src/components/maps/ActivityTrackingMap";
 
@@ -113,6 +121,7 @@ function buildCaptureCoordinates(path: Coordinate[]): Coordinate[] {
 export default function ActivityTrackingScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { height: windowHeight } = useWindowDimensions();
   const queryClient = useQueryClient();
 
   const authUser = useAuthStore((state) => state.user);
@@ -311,12 +320,8 @@ export default function ActivityTrackingScreen() {
   }, []);
 
   const region = useMemo(() => {
-    if (isTracking && currentLocation) {
-      return currentLocation;
-    }
-
     return manualFocus ?? currentLocation ?? GREATER_NOIDA_JAGAT_FARM;
-  }, [currentLocation, isTracking, manualFocus]);
+  }, [currentLocation, manualFocus]);
 
   const distanceKm = useMemo(
     () => calculateDistanceKm(coordinates),
@@ -329,6 +334,10 @@ export default function ActivityTrackingScreen() {
   const liveXp = useMemo(
     () => estimateXp(distanceKm, areaCaptured),
     [distanceKm, areaCaptured],
+  );
+  const mapHeight = useMemo(
+    () => Math.round(windowHeight * 0.55),
+    [windowHeight],
   );
 
   async function locateMe() {
@@ -370,7 +379,7 @@ export default function ActivityTrackingScreen() {
     };
 
     setCurrentLocation(point);
-    setManualFocus(null);
+    setManualFocus(point);
     setCoordinates([point]);
     setDurationSec(0);
     setLastLogged(null);
@@ -533,7 +542,7 @@ export default function ActivityTrackingScreen() {
             styles.mapCard,
             {
               borderColor: theme.border,
-              height: isTracking ? 420 : 308,
+              height: mapHeight,
             },
           ]}
         >
