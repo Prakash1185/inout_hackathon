@@ -1,4 +1,6 @@
-import MapView, { Circle, Marker, Polygon, Polyline } from "react-native-maps";
+import { useEffect, useRef } from "react";
+import { View } from "react-native";
+import MapView, { Marker, Polygon, Polyline } from "react-native-maps";
 
 import type { Coordinate } from "@/shared/types";
 
@@ -25,14 +27,16 @@ export function ActivityTrackingMap({
   currentLocation,
   coordinates,
   userPolygons,
-  userCenters,
   othersPolygons,
-  othersCenters,
   userOwnerName,
   otherOwnerNames,
   otherTerritoryColors,
   onTerritoryPress,
 }: ActivityTrackingMapProps) {
+  const ZOOM_DELTA = 0.02;
+  const mapRef = useRef<MapView | null>(null);
+  const hasMountedRef = useRef(false);
+
   const fallbackPalette = [
     { stroke: "rgba(255,120,120,0.9)", fill: "rgba(255,120,120,0.22)" },
     { stroke: "rgba(143,110,255,0.9)", fill: "rgba(143,110,255,0.20)" },
@@ -52,16 +56,37 @@ export function ActivityTrackingMap({
     return fallbackPalette[index % fallbackPalette.length];
   }
 
+  useEffect(() => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
+    mapRef.current.animateToRegion(
+      {
+        ...initialCoordinate,
+        latitudeDelta: ZOOM_DELTA,
+        longitudeDelta: ZOOM_DELTA,
+      },
+      280,
+    );
+  }, [initialCoordinate]);
+
   return (
     <MapView
+      ref={mapRef}
       style={{ flex: 1 }}
-      region={{
+      initialRegion={{
         ...initialCoordinate,
-        latitudeDelta: 0.012,
-        longitudeDelta: 0.012,
+        latitudeDelta: ZOOM_DELTA,
+        longitudeDelta: ZOOM_DELTA,
       }}
-      showsUserLocation
-      showsMyLocationButton
+      showsUserLocation={true}
+      showsMyLocationButton={true}
     >
       {userPolygons.map((polygon, index) => (
         <Polygon
@@ -99,40 +124,6 @@ export function ActivityTrackingMap({
         />
       ))}
 
-      {othersCenters.map((center, index) => (
-        <Circle
-          key={`others-center-${center.latitude}-${center.longitude}-${index}`}
-          center={center}
-          radius={42}
-          strokeColor={getOtherColor(index).stroke}
-          fillColor={getOtherColor(index).fill}
-          onPress={() =>
-            onTerritoryPress?.({
-              territoryId: `others-center-${index}`,
-              ownerName: otherOwnerNames[index] ?? `Rival ${index + 1}`,
-              ownerType: "rival",
-            })
-          }
-        />
-      ))}
-
-      {userCenters.map((center, index) => (
-        <Circle
-          key={`user-center-${center.latitude}-${center.longitude}-${index}`}
-          center={center}
-          radius={36}
-          strokeColor="rgba(68,121,255,0.95)"
-          fillColor="rgba(68,121,255,0.25)"
-          onPress={() =>
-            onTerritoryPress?.({
-              territoryId: `user-center-${index}`,
-              ownerName: userOwnerName,
-              ownerType: "you",
-            })
-          }
-        />
-      ))}
-
       {coordinates.length > 1 ? (
         <Polyline
           coordinates={coordinates}
@@ -147,9 +138,20 @@ export function ActivityTrackingMap({
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
           }}
-          title="You"
-          pinColor="#38B6FF"
-        />
+          anchor={{ x: 0.5, y: 0.5 }}
+          tracksViewChanges={false}
+        >
+          <View
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 9,
+              borderWidth: 3,
+              borderColor: "#FFFFFF",
+              backgroundColor: "#2D8CFF",
+            }}
+          />
+        </Marker>
       ) : null}
     </MapView>
   );
