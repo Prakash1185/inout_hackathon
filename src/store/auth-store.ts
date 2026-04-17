@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
       setHasBootstrapped: (value) => set({ hasBootstrapped: value }),
     }),
     {
-      name: "terranova-auth-store",
+      name: "velora-auth-store",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ identity: state.identity, user: state.user }),
     },

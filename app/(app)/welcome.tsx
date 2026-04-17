@@ -2,12 +2,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-    Alert,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { NeonButton } from "@/src/components/NeonButton";
@@ -15,8 +15,8 @@ import { Screen } from "@/src/components/Screen";
 import { updateProfile } from "@/src/services/user.service";
 import { useAuthStore } from "@/src/store/auth-store";
 import {
-    type OnboardingGender,
-    useOnboardingStore,
+  type OnboardingGender,
+  useOnboardingStore,
 } from "@/src/store/onboarding-store";
 import { useAppTheme, useUiStore } from "@/src/store/ui-store";
 
@@ -247,7 +247,7 @@ export default function WelcomeScreen() {
             className="text-xs uppercase tracking-[2px]"
             style={{ color: theme.textMuted }}
           >
-            Terranova
+            Velora
           </Text>
           <Text
             className="mt-2 text-3xl font-semibold"

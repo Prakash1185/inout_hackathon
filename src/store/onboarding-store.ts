@@ -31,7 +31,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       clearProfile: () => set({ profile: null }),
     }),
     {
-      name: "terranova-onboarding-profile",
+      name: "velora-onboarding-profile",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ profile: state.profile }),
     },
