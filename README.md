@@ -1,6 +1,7 @@
 # Velora - Gamified Activity Tracking (Expo + Node)
 
 Production-style foundation for a real-world activity competition app inspired by INTVL, Duolingo, and Strava.
+![Image](/assets/images/hero.png)
 
 ## Monorepo Layout
 
@@ -107,7 +108,7 @@ You can override via environment variable at runtime.
 
 ## Auth Notes
 
-- Signup is handled by Google OAuth through Clerk.
+- Signup is handled by Google OAuth through Clerk.\*\*
 - No local password auth endpoints are used.
 - On logout, clear app state and sign out from Clerk.
 
