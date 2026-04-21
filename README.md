@@ -1,6 +1,6 @@
 # Velora - Gamified Activity Tracking (Expo + Node)
 
-Production-style foundation for a real-world activity competition app inspired by INTVL, Duolingo, and Strava.
+Production-style foundation for a real-world activity competition app.
 ![Image](/assets/images/hero.png)
 
 ## Monorepo Layout
