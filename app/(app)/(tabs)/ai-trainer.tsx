@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -12,6 +13,7 @@ import {
     type MuscleTarget,
     type TrainerIconName,
 } from "@/src/constants/ai-trainer";
+  import { generateTrainerPlanFromAi } from "@/src/services/ai-trainer.service";
 import { useAuthStore } from "@/src/store/auth-store";
 import { useAppTheme } from "@/src/store/ui-store";
 
@@ -65,6 +67,10 @@ export default function AiTrainerScreen() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [sessionXp, setSessionXp] = useState(0);
 
+  const planMutation = useMutation({
+    mutationFn: generateTrainerPlanFromAi,
+  });
+
   const levelState = getLevelProgress(user);
 
   useEffect(() => {
@@ -94,13 +100,35 @@ export default function AiTrainerScreen() {
   const completionRatio =
     plan.length === 0 ? 0 : completedIds.length / Math.max(plan.length, 1);
 
-  const regeneratePlan = () => {
-    const next = buildTrainerPlan({
+  const buildLocalFallbackPlan = () =>
+    buildTrainerPlan({
       targetMuscle,
       minutes: toInt(minutesInput, 28),
       repetitions: toInt(repetitionsInput, 12),
       extraContext,
     });
+
+  const regeneratePlan = async () => {
+    const fallback = buildLocalFallbackPlan();
+
+    let next: GeneratedExercise[] = fallback;
+
+    try {
+      const generated = await planMutation.mutateAsync({
+        targetMuscle,
+        minutes: toInt(minutesInput, 28),
+        repetitions: toInt(repetitionsInput, 12),
+        extraContext,
+        userLevel: user?.level,
+      });
+
+      if (generated.plan.length > 0) {
+        next = generated.plan;
+      }
+    } catch {
+      next = fallback;
+    }
+
     setPlan(next);
     setCurrentStep(0);
     setCompletedIds([]);
@@ -110,7 +138,7 @@ export default function AiTrainerScreen() {
 
   const startPlan = () => {
     if (plan.length === 0) {
-      regeneratePlan();
+      regeneratePlan().catch(() => undefined);
       return;
     }
     setIsStarted(true);
@@ -284,13 +312,17 @@ export default function AiTrainerScreen() {
 
           <View className="mt-4 flex-row gap-3">
             <View className="flex-1">
-              <NeonButton label="Generate Plan" onPress={regeneratePlan} />
+              <NeonButton
+                label={planMutation.isPending ? "Generating..." : "Generate Plan"}
+                onPress={() => regeneratePlan().catch(() => undefined)}
+                disabled={planMutation.isPending}
+              />
             </View>
             <View className="flex-1">
               <NeonButton
                 label={isStarted ? "Plan Running" : "Start Plan"}
                 onPress={startPlan}
-                disabled={isStarted || plan.length === 0}
+                disabled={isStarted || plan.length === 0 || planMutation.isPending}
                 variant="secondary"
               />
             </View>
