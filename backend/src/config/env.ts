@@ -14,6 +14,8 @@ const envSchema = z.object({
     .min(1, "MONGODB_URI is required")
     .default(defaultMongoUri),
   CLIENT_ORIGIN: z.string().default("*"),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default("gemini-2.5-flash-lite"),
 });
 
 const parsed = envSchema.safeParse(process.env);
