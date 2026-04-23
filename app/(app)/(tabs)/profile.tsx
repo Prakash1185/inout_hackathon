@@ -1151,17 +1151,20 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        <Pressable
-          className="mt-6 rounded-2xl border py-3"
-          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-          onPress={async () => {
-            await signOut();
-            clearIdentity();
-            queryClient.clear();
-          }}
-        >
-          <Text className="text-center font-semibold text-red-500">Logout</Text>
-        </Pressable>
+        <View className="mt-6">
+          <NeonButton
+            label="Logout"
+            onPress={() => {
+              signOut()
+                .then(() => {
+                  clearIdentity();
+                  queryClient.clear();
+                })
+                .catch(() => undefined);
+            }}
+            variant="secondary"
+          />
+        </View>
       </ScrollView>
 
       <Modal

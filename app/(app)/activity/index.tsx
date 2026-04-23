@@ -14,6 +14,7 @@ import {
 } from "react-native";
 
 import type { Coordinate } from "@/shared/types";
+import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
 import {
   createActivity,
@@ -720,31 +721,17 @@ export default function ActivityTrackingScreen() {
 
         <View style={styles.actionsRow}>
           {!isTracking ? (
-            <Pressable
-              style={[
-                styles.ctaButton,
-                { borderColor: theme.border, backgroundColor: theme.accent },
-              ]}
+            <NeonButton
+              label="Start Tracking"
               onPress={startTracking}
-            >
-              <Ionicons name="play" size={15} color="#FFFFFF" />
-              <Text style={[styles.ctaText, { color: "#FFFFFF" }]}>
-                Start Tracking
-              </Text>
-            </Pressable>
+              icon={<Ionicons name="play" size={16} color="#FFFFFF" />}
+            />
           ) : (
-            <Pressable
-              style={[
-                styles.ctaButton,
-                { borderColor: theme.border, backgroundColor: "#E11D48" },
-              ]}
+            <NeonButton
+              label="Stop & Log Walk"
               onPress={() => setStopConfirmOpen(true)}
-            >
-              <Ionicons name="stop" size={15} color="#FFFFFF" />
-              <Text style={[styles.ctaText, { color: "#FFFFFF" }]}>
-                Stop & Log Walk
-              </Text>
-            </Pressable>
+              icon={<Ionicons name="stop" size={16} color="#FFFFFF" />}
+            />
           )}
         </View>
         {/* 
@@ -827,43 +814,19 @@ export default function ActivityTrackingScreen() {
             </Text>
 
             <View style={{ marginTop: 14, gap: 10 }}>
-              <Pressable
-                style={{
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  borderColor: theme.border,
-                  backgroundColor: theme.accent,
-                  alignItems: "center",
-                  paddingVertical: 12,
-                  opacity: saveMutation.isPending ? 0.7 : 1,
-                }}
+              <NeonButton
+                label={saveMutation.isPending ? "Logging..." : "Yes, Stop & Save"}
                 onPress={confirmStopAndSave}
                 disabled={saveMutation.isPending}
-              >
-                <Text
-                  style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}
-                >
-                  {saveMutation.isPending ? "Logging..." : "Yes, Stop & Save"}
-                </Text>
-              </Pressable>
+                icon={<Ionicons name="stop" size={16} color="#FFFFFF" />}
+              />
 
-              <Pressable
-                style={{
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  borderColor: theme.border,
-                  backgroundColor: theme.surfaceMuted,
-                  alignItems: "center",
-                  paddingVertical: 12,
-                }}
+              <NeonButton
+                label="Continue Walking"
                 onPress={() => setStopConfirmOpen(false)}
-              >
-                <Text
-                  style={{ fontSize: 14, fontWeight: "700", color: theme.text }}
-                >
-                  Continue Walking
-                </Text>
-              </Pressable>
+                variant="secondary"
+                icon={<Ionicons name="walk" size={16} color={theme.text} />}
+              />
             </View>
           </Pressable>
         </Pressable>
@@ -1000,20 +963,6 @@ const styles = StyleSheet.create({
   actionsRow: {
     marginTop: 10,
     marginBottom: 2,
-  },
-  ctaButton: {
-    width: "100%",
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 6,
-  },
-  ctaText: {
-    fontSize: 14,
-    fontWeight: "700",
   },
   modalBackdrop: {
     flex: 1,

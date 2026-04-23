@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 
+import { NeonButton } from "@/src/components/NeonButton";
 import { useAppTheme } from "@/src/store/ui-store";
 
 export default function LoginScreen() {
@@ -144,18 +145,9 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          <Pressable
-            onPress={handleEmailLogin}
-            className="mt-4 rounded-2xl py-3"
-            style={{ backgroundColor: theme.accent }}
-          >
-            <Text
-              className="text-center font-semibold"
-              style={{ color: theme.background }}
-            >
-              Continue
-            </Text>
-          </Pressable>
+          <View className="mt-4">
+            <NeonButton label="Continue" onPress={handleEmailLogin} />
+          </View>
 
           <View className="my-4 flex-row items-center gap-3">
             <View
@@ -171,21 +163,13 @@ export default function LoginScreen() {
             />
           </View>
 
-          <Pressable
+          <NeonButton
+            label={loading ? "Signing in..." : "Sign in with Google"}
             onPress={() => void handleGoogleLogin()}
-            className="flex-row items-center justify-center gap-2 rounded-2xl border py-3"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surfaceMuted,
-              opacity: loading ? 0.7 : 1,
-            }}
             disabled={loading}
-          >
-            <AntDesign name="google" size={16} color={theme.text} />
-            <Text className="font-semibold" style={{ color: theme.text }}>
-              {loading ? "Signing in..." : "Sign in with Google"}
-            </Text>
-          </Pressable>
+            variant="secondary"
+            icon={<AntDesign name="google" size={16} color={theme.text} />}
+          />
 
           <View className="mt-5 flex-row items-center justify-center">
             <Text className="text-sm" style={{ color: theme.textMuted }}>
@@ -232,7 +216,8 @@ export default function LoginScreen() {
             className="mt-5 text-center text-[11px]"
             style={{ color: theme.textMuted }}
           >
-            By clicking "Continue", you agree to the Terms and Privacy Policy.
+            By clicking &quot;Continue&quot;, you agree to the Terms and Privacy
+            Policy.
           </Text>
         </View>
       </ScrollView>

@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 
+import { NeonButton } from "@/src/components/NeonButton";
 import { useAppTheme } from "@/src/store/ui-store";
 
 export default function SignUpScreen() {
@@ -182,18 +183,9 @@ export default function SignUpScreen() {
             </View>
           </View>
 
-          <Pressable
-            onPress={handleEmailSignUp}
-            className="mt-4 rounded-2xl py-3"
-            style={{ backgroundColor: theme.accent }}
-          >
-            <Text
-              className="text-center font-semibold"
-              style={{ color: theme.background }}
-            >
-              Create account
-            </Text>
-          </Pressable>
+          <View className="mt-4">
+            <NeonButton label="Create account" onPress={handleEmailSignUp} />
+          </View>
 
           <View className="my-4 flex-row items-center gap-3">
             <View
@@ -209,21 +201,13 @@ export default function SignUpScreen() {
             />
           </View>
 
-          <Pressable
+          <NeonButton
+            label={loading ? "Creating account..." : "Sign up with Google"}
             onPress={() => void handleGoogleSignUp()}
-            className="flex-row items-center justify-center gap-2 rounded-2xl border py-3"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surfaceMuted,
-              opacity: loading ? 0.7 : 1,
-            }}
             disabled={loading}
-          >
-            <AntDesign name="google" size={16} color={theme.text} />
-            <Text className="font-semibold" style={{ color: theme.text }}>
-              {loading ? "Creating account..." : "Sign up with Google"}
-            </Text>
-          </Pressable>
+            variant="secondary"
+            icon={<AntDesign name="google" size={16} color={theme.text} />}
+          />
 
           <View className="mt-5 flex-row items-center justify-center">
             <Text className="text-sm" style={{ color: theme.textMuted }}>
