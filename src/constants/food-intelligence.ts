@@ -10,9 +10,31 @@ export interface MealAnalysisResult {
   title: string;
   subtitle: string;
   detectedItems: string[];
+  detectedDetails?: FoodDetectedDetail[];
+  labels?: FoodLabelHint[];
   glycemicScore: number;
+  glycemicBand?: "Low" | "Medium" | "High";
   suggestion: string;
+  replacementSuggestions?: string[];
   estimatedCalories: number;
+  stepsRecommendation?: number;
+  walkMinutesRecommendation?: number;
+  aiConfidence?: number;
+  source?: "vision" | "manual" | "fallback";
+  humanInLoopNote?: string;
+}
+
+export interface FoodDetectedDetail {
+  name: string;
+  confidence: number;
+  quantity: number;
+  glycemic: number;
+  estimatedCalories: number;
+}
+
+export interface FoodLabelHint {
+  label: string;
+  confidence: number;
 }
 
 export interface ManualMealItemInput {
@@ -189,11 +211,41 @@ export function analyzeManualMeal(
     detectedItems: scoredItems.map((item) => item.name),
     glycemicScore: weightedScore,
     suggestion,
+    replacementSuggestions: [suggestion],
     estimatedCalories: 180 + totalQuantity * 110,
+    stepsRecommendation: Math.max(
+      1200,
+      Math.round((180 + totalQuantity * 110) * 19),
+    ),
+    walkMinutesRecommendation: Math.max(
+      12,
+      Math.round(Math.max(1200, (180 + totalQuantity * 110) * 19) / 105),
+    ),
+    aiConfidence: 0.68,
+    source: "manual",
+    humanInLoopNote:
+      "Hybrid mode: user-entered meal details improve analysis reliability.",
   };
 }
 
 export function analyzeImageMeal(imageUri: string): MealAnalysisResult {
   const presetIndex = imageUri.length % imageMealPresets.length;
-  return imageMealPresets[presetIndex] ?? imageMealPresets[0];
+  const base = imageMealPresets[presetIndex] ?? imageMealPresets[0];
+
+  return {
+    ...base,
+    replacementSuggestions: [base.suggestion],
+    stepsRecommendation: Math.max(
+      1200,
+      Math.round(base.estimatedCalories * 19),
+    ),
+    walkMinutesRecommendation: Math.max(
+      12,
+      Math.round(Math.max(1200, base.estimatedCalories * 19) / 105),
+    ),
+    aiConfidence: 0.71,
+    source: "fallback",
+    humanInLoopNote:
+      "Hybrid mode: AI detects meal, user confirms portion size for better accuracy.",
+  };
 }

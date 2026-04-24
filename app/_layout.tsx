@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/clerk-expo";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ClerkIdentityBridge } from "@/src/components/ClerkIdentityBridge";
 import { AppProviders } from "@/src/providers/AppProviders";
@@ -25,11 +26,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <AppProviders>
-        <ClerkIdentityBridge />
-        <Stack screenOptions={{ headerShown: false }} />
-      </AppProviders>
-    </ClerkProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <AppProviders>
+          <ClerkIdentityBridge />
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppProviders>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }
