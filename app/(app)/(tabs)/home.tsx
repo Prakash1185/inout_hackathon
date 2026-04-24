@@ -983,6 +983,11 @@ export default function HomeScreen() {
       onPress: () => router.push("/(app)/(tabs)/events"),
     },
     {
+      label: "Doctors",
+      icon: "medkit-outline",
+      onPress: () => router.push("/doctors"),
+    },
+    {
       label: "Updates",
       icon: "newspaper-outline",
       onPress: () =>

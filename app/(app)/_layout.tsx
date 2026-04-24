@@ -70,6 +70,8 @@ export default function ProtectedLayout() {
       <Stack.Screen name="activity/result" />
       <Stack.Screen name="events/[id]" />
       <Stack.Screen name="events/host" />
+      <Stack.Screen name="doctors" />
+      <Stack.Screen name="doctors/[id]" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="trainer/[id]" />
       <Stack.Screen name="updates/[id]" />
