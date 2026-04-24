@@ -40,6 +40,19 @@ interface WeeklyStat {
   steps: number;
 }
 
+interface HealthTrendStat {
+  label: string;
+  recovery: number;
+  sleepHours: number;
+  hydrationLiters: number;
+  restingHr: number;
+}
+
+interface HealthHeatmapRow {
+  label: string;
+  values: number[];
+}
+
 interface BadgeInfo {
   id: string;
   title: string;
@@ -196,6 +209,73 @@ const healthIndicators = [
     icon: "barbell-outline" as IconName,
     note: "Good rhythm",
   },
+];
+
+const healthTrend: HealthTrendStat[] = [
+  {
+    label: "Mo",
+    recovery: 76,
+    sleepHours: 7.1,
+    hydrationLiters: 2.2,
+    restingHr: 69,
+  },
+  {
+    label: "Tu",
+    recovery: 72,
+    sleepHours: 6.8,
+    hydrationLiters: 2.0,
+    restingHr: 71,
+  },
+  {
+    label: "We",
+    recovery: 80,
+    sleepHours: 7.6,
+    hydrationLiters: 2.4,
+    restingHr: 67,
+  },
+  {
+    label: "Th",
+    recovery: 78,
+    sleepHours: 7.3,
+    hydrationLiters: 2.5,
+    restingHr: 66,
+  },
+  {
+    label: "Fr",
+    recovery: 84,
+    sleepHours: 7.9,
+    hydrationLiters: 2.7,
+    restingHr: 64,
+  },
+  {
+    label: "Sa",
+    recovery: 81,
+    sleepHours: 8.2,
+    hydrationLiters: 2.6,
+    restingHr: 63,
+  },
+  {
+    label: "Su",
+    recovery: 79,
+    sleepHours: 7.5,
+    hydrationLiters: 2.3,
+    restingHr: 65,
+  },
+];
+
+const healthConsistencyMap: HealthHeatmapRow[] = [
+  { label: "W1", values: [3, 4, 2, 4, 5, 4, 3] },
+  { label: "W2", values: [4, 3, 4, 5, 4, 3, 4] },
+  { label: "W3", values: [2, 3, 4, 4, 5, 4, 5] },
+  { label: "W4", values: [3, 4, 5, 4, 4, 5, 4] },
+  { label: "W5", values: [4, 5, 3, 5, 4, 4, 3] },
+  { label: "W6", values: [5, 4, 5, 3, 4, 5, 4] },
+  { label: "W7", values: [3, 4, 4, 5, 5, 3, 5] },
+  { label: "W8", values: [4, 4, 5, 4, 3, 5, 4] },
+  { label: "W9", values: [5, 3, 4, 5, 4, 4, 5] },
+  { label: "W10", values: [4, 5, 5, 4, 5, 4, 3] },
+  { label: "W11", values: [3, 4, 5, 5, 4, 5, 4] },
+  { label: "W12", values: [5, 5, 4, 4, 5, 5, 5] },
 ];
 
 const profileGenderOptions: OnboardingGender[] = [
@@ -424,6 +504,79 @@ export default function ProfileScreen() {
       },
     ];
   }, [bmiLabel, bmiValue, onboardingProfile]);
+
+  const healthSummaryCards = useMemo(() => {
+    const averages = healthTrend.reduce(
+      (acc, item) => {
+        acc.recovery += item.recovery;
+        acc.sleepHours += item.sleepHours;
+        acc.hydrationLiters += item.hydrationLiters;
+        acc.restingHr += item.restingHr;
+        return acc;
+      },
+      {
+        recovery: 0,
+        sleepHours: 0,
+        hydrationLiters: 0,
+        restingHr: 0,
+      },
+    );
+
+    const count = Math.max(healthTrend.length, 1);
+    const avgRecovery = averages.recovery / count;
+    const avgSleep = averages.sleepHours / count;
+    const avgHydration = averages.hydrationLiters / count;
+    const avgRestingHr = averages.restingHr / count;
+
+    return [
+      {
+        label: "Avg Sleep",
+        value: `${avgSleep.toFixed(1)}h`,
+        note: "Up 0.3h this week",
+        icon: "moon-outline" as IconName,
+        progress: Math.min(100, Math.round((avgSleep / 9) * 100)),
+      },
+      {
+        label: "Hydration",
+        value: `${avgHydration.toFixed(1)}L`,
+        note: "Closer to daily target",
+        icon: "water-outline" as IconName,
+        progress: Math.min(100, Math.round((avgHydration / 3) * 100)),
+      },
+      {
+        label: "Resting HR",
+        value: `${Math.round(avgRestingHr)} bpm`,
+        note: "Lower than last week",
+        icon: "heart-outline" as IconName,
+        progress: Math.max(
+          0,
+          Math.min(100, Math.round(((78 - avgRestingHr) / 18) * 100)),
+        ),
+      },
+      {
+        label: "Readiness",
+        value: `${Math.round(avgRecovery)}%`,
+        note: "Recovery trend is stable",
+        icon: "pulse-outline" as IconName,
+        progress: Math.round(avgRecovery),
+      },
+    ];
+  }, []);
+
+  const readinessMax = useMemo(
+    () => Math.max(...healthTrend.map((item) => item.recovery), 1),
+    [],
+  );
+
+  const sleepMax = useMemo(
+    () => Math.max(...healthTrend.map((item) => item.sleepHours), 1),
+    [],
+  );
+
+  const hydrationMax = useMemo(
+    () => Math.max(...healthTrend.map((item) => item.hydrationLiters), 1),
+    [],
+  );
 
   function openPersonalDetailsEditor() {
     setPersonalGoal(onboardingProfile?.goal ?? "Stay active daily");
@@ -828,6 +981,349 @@ export default function ProfileScreen() {
               </View>
             </View>
           ))}
+        </View>
+
+        <View className="mt-6 flex-row items-center justify-between">
+          <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+            Health Insights
+          </Text>
+          <Text className="text-xs" style={{ color: theme.textMuted }}>
+            deeper signals
+          </Text>
+        </View>
+
+        <View className="mt-3 flex-row flex-wrap gap-3">
+          {healthSummaryCards.map((item) => (
+            <View
+              key={item.label}
+              className="w-[48%] rounded-2xl border p-4"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.surface,
+              }}
+            >
+              <View className="flex-row items-center gap-2">
+                <View
+                  className="h-9 w-9 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: theme.surfaceMuted }}
+                >
+                  <Ionicons name={item.icon} size={16} color={theme.accent} />
+                </View>
+                <Text className="text-[11px]" style={{ color: theme.textMuted }}>
+                  {item.label}
+                </Text>
+              </View>
+
+              <Text
+                className="mt-4 text-lg font-semibold"
+                style={{ color: theme.text }}
+              >
+                {item.value}
+              </Text>
+              <Text className="mt-1 text-[11px]" style={{ color: theme.textMuted }}>
+                {item.note}
+              </Text>
+
+              <View
+                className="mt-3 h-1.5 overflow-hidden rounded-full"
+                style={{ backgroundColor: theme.surfaceMuted }}
+              >
+                <View
+                  className="h-1.5 rounded-full"
+                  style={{
+                    width: `${item.progress}%`,
+                    backgroundColor: theme.accent,
+                  }}
+                />
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View className="mt-3 flex-col gap-3">
+          <View
+            className="rounded-2xl border p-4"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-sm font-semibold" style={{ color: theme.text }}>
+                  Recovery Trend
+                </Text>
+                <Text className="mt-1 text-[11px]" style={{ color: theme.textMuted }}>
+                  last 7 days
+                </Text>
+              </View>
+              <Text className="text-xs font-semibold" style={{ color: theme.accent }}>
+                +6%
+              </Text>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4 -mx-2">
+              <View className="flex-row items-end gap-2 px-2">
+                {healthTrend.map((item, index) => {
+                  const height = Math.max(
+                    16,
+                    Math.round((item.recovery / readinessMax) * 88),
+                  );
+
+                  return (
+                    <View key={item.label} className="items-center" style={{ minWidth: 44 }}>
+                      <View
+                        className="items-center justify-end"
+                        style={{ height: 96, width: 32 }}
+                      >
+                        <View
+                          style={{
+                            position: "absolute",
+                            bottom: height - 4,
+                            width: index === healthTrend.length - 1 ? 0 : 20,
+                            height: 2,
+                            backgroundColor: theme.accent,
+                            opacity: 0.28,
+                          }}
+                        />
+                        <View
+                          style={{
+                            width: 6,
+                            height,
+                            borderRadius: 999,
+                            backgroundColor: theme.accent,
+                          }}
+                        />
+                        <View
+                          style={{
+                            position: "absolute",
+                            bottom: height - 5,
+                            width: 10,
+                            height: 10,
+                            borderRadius: 999,
+                            backgroundColor: theme.surface,
+                            borderWidth: 2,
+                            borderColor: theme.accent,
+                          }}
+                        />
+                      </View>
+                      <Text
+                        className="mt-2 text-[10px]"
+                        style={{ color: theme.textMuted }}
+                      >
+                        {item.label}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+
+          <View
+            className="rounded-2xl border p-4"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text className="text-sm font-semibold" style={{ color: theme.text }}>
+                  Consistency Map
+                </Text>
+                <Text className="mt-1 text-[11px]" style={{ color: theme.textMuted }}>
+                  sleep and recovery rhythm
+                </Text>
+              </View>
+              <Ionicons name="grid-outline" size={16} color={theme.accent} />
+            </View>
+
+            <View className="mt-4">
+              <View className="flex-row items-start">
+                <View style={{ width: 20 }} />
+                <View className="flex-row gap-1">
+                  {["M", "T", "W", "T", "F", "S", "S"].map((day) => (
+                    <Text
+                      key={day}
+                      className="text-[9px] font-semibold"
+                      style={{
+                        color: theme.textMuted,
+                        width: 16,
+                        textAlign: "center",
+                      }}
+                    >
+                      {day}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2 -mx-1">
+                <View className="flex-row gap-2 px-1">
+                  {healthConsistencyMap.map((week) => (
+                    <View key={week.label} className="items-center">
+                      <View className="gap-1">
+                        {week.values.map((value, dayIndex) => (
+                          <View
+                            key={`${week.label}-${dayIndex}`}
+                            className="rounded-sm"
+                            style={{
+                              height: 16,
+                              width: 16,
+                              backgroundColor:
+                                value >= 5
+                                  ? theme.accent
+                                  : value === 4
+                                    ? theme.accentSoft
+                                    : value === 3
+                                      ? theme.surfaceMuted
+                                      : theme.border,
+                              opacity: value <= 2 ? 0.9 : 1,
+                            }}
+                          />
+                        ))}
+                      </View>
+                      <Text
+                        className="mt-2 text-[9px] font-semibold"
+                        style={{ color: theme.textMuted }}
+                      >
+                        {week.label}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+
+            <View className="mt-4 flex-row items-center justify-between">
+              <Text className="text-[10px]" style={{ color: theme.textMuted }}>
+                lighter
+              </Text>
+              <View className="flex-row gap-1.5">
+                {[1, 2, 3, 4].map((step) => (
+                  <View
+                    key={step}
+                    className="h-2 w-4 rounded-full"
+                    style={{
+                      backgroundColor:
+                        step === 4
+                          ? theme.accent
+                          : step === 3
+                            ? theme.accentSoft
+                            : step === 2
+                              ? theme.surfaceMuted
+                              : theme.border,
+                    }}
+                  />
+                ))}
+              </View>
+              <Text className="text-[10px]" style={{ color: theme.textMuted }}>
+                stronger
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View
+          className="mt-3 rounded-2xl border p-4"
+          style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+        >
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-sm font-semibold" style={{ color: theme.text }}>
+                Daily Wellness Mix
+              </Text>
+              <Text className="mt-1 text-[11px]" style={{ color: theme.textMuted }}>
+                sleep vs hydration vs readiness
+              </Text>
+            </View>
+            <Ionicons name="analytics-outline" size={16} color={theme.accent} />
+          </View>
+
+          <View className="mt-4 flex-row items-end gap-3">
+            {healthTrend.map((item) => {
+              const sleepHeight = Math.max(
+                10,
+                Math.round((item.sleepHours / sleepMax) * 70),
+              );
+              const hydrationHeight = Math.max(
+                10,
+                Math.round((item.hydrationLiters / hydrationMax) * 70),
+              );
+              const recoveryHeight = Math.max(
+                10,
+                Math.round((item.recovery / readinessMax) * 70),
+              );
+
+              return (
+                <View key={item.label} className="flex-1 items-center">
+                  <View
+                    className="w-full flex-row items-end justify-center gap-1"
+                    style={{ height: 82 }}
+                  >
+                    <View
+                      className="w-2 rounded-full"
+                      style={{
+                        height: sleepHeight,
+                        backgroundColor: theme.accentSoft,
+                      }}
+                    />
+                    <View
+                      className="w-2 rounded-full"
+                      style={{
+                        height: hydrationHeight,
+                        backgroundColor: theme.textMuted,
+                      }}
+                    />
+                    <View
+                      className="w-2 rounded-full"
+                      style={{
+                        height: recoveryHeight,
+                        backgroundColor: theme.accent,
+                      }}
+                    />
+                  </View>
+                  <Text
+                    className="mt-2 text-[10px]"
+                    style={{ color: theme.textMuted }}
+                  >
+                    {item.label}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          <View className="mt-4 flex-row flex-wrap gap-3">
+            <View className="flex-row items-center gap-2">
+              <View
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: theme.accentSoft }}
+              />
+              <Text className="text-[10px]" style={{ color: theme.textMuted }}>
+                Sleep
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <View
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: theme.textMuted }}
+              />
+              <Text className="text-[10px]" style={{ color: theme.textMuted }}>
+                Hydration
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <View
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: theme.accent }}
+              />
+              <Text className="text-[10px]" style={{ color: theme.textMuted }}>
+                Recovery
+              </Text>
+            </View>
+          </View>
         </View>
 
         <View className="mt-6 flex-row items-center justify-between">
