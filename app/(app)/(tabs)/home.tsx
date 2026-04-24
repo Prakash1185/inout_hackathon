@@ -17,7 +17,7 @@ import {
 
 import type { LeaderboardEntry } from "@/shared/types";
 import { BottomActionSheet } from "@/src/components/BottomActionSheet";
-import { HomeTerritoryMap } from "@/src/components/maps/HomeTerritoryMap";
+import { HomeTerritoryMap } from "@/src/components/maps/HomeTerritoryMap.native";
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
 import { demoNotifications } from "@/src/constants/notifications";
@@ -36,6 +36,51 @@ type DrawerItem = {
   icon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
 };
+
+function MiniStatCard({
+  label,
+  value,
+  icon,
+  theme,
+  mode,
+}: {
+  label: string;
+  value: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  theme: ReturnType<typeof useAppTheme>["theme"];
+  mode: ReturnType<typeof useAppTheme>["mode"];
+}) {
+  return (
+    <View
+      className="flex-1 rounded-2xl border px-3 py-3"
+      style={getInnerCardStyle(theme, mode)}
+    >
+      {/* ICON */}
+      <View
+        className="h-10 w-10 items-center justify-center rounded-xl border"
+        style={{
+          borderColor: theme.border,
+          backgroundColor: theme.surfaceMuted,
+        }}
+      >
+        <Ionicons name={icon} size={16} color={theme.text} />
+      </View>
+
+      {/* LABEL */}
+      <Text className="mt-3 text-[12px]" style={{ color: theme.textMuted }}>
+        {label}
+      </Text>
+
+      {/* VALUE */}
+      <Text
+        className="mt-1 text-lg font-semibold"
+        style={{ color: theme.text }}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
 
 function getGreetingByHour(date: Date) {
   const hour = date.getHours();
@@ -258,7 +303,10 @@ function SectionHeader({
 }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="text-lg font-semibold" style={{ color: theme.text }}>
+      <Text
+        className="text-lg font-semibold px-3.5 py-1 rounded-xl border border-gray-800/10"
+        style={{ color: theme.text, backgroundColor: theme.accentSoft }}
+      >
         {title}
       </Text>
       {actionLabel && onPress ? (
@@ -271,6 +319,416 @@ function SectionHeader({
           </Text>
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+type FeatureBannerProps = {
+  title: string;
+  label: string;
+  description: string;
+  ctaLabel: string;
+  variant: "food" | "recovery" | "trainer";
+  onPress: () => void;
+  theme: ReturnType<typeof useAppTheme>["theme"];
+  mode: ReturnType<typeof useAppTheme>["mode"];
+};
+
+function FeatureBanner({
+  title,
+  label,
+  description,
+  ctaLabel,
+  variant,
+  onPress,
+  theme,
+  mode,
+}: FeatureBannerProps) {
+  const isFood = variant === "food";
+  const isRecovery = variant === "recovery";
+  const isTrainer = variant === "trainer";
+
+  const containerStyle = {
+    backgroundColor: isFood
+      ? theme.surface
+      : isRecovery
+        ? theme.accentSoft
+        : theme.surfaceMuted,
+    shadowColor: theme.button.primaryDepth,
+    shadowOpacity: mode === "dark" ? 0.3 : 0.12,
+    shadowRadius: isTrainer ? 20 : 18,
+    shadowOffset: { width: 0, height: isTrainer ? 12 : 10 },
+    elevation: isTrainer ? 7 : 6,
+  } as const;
+
+  const labelStyle = isRecovery
+    ? { color: theme.background, backgroundColor: theme.button.primaryEnd }
+    : {
+        color: theme.text,
+        backgroundColor: isFood ? theme.background : theme.surface,
+      };
+
+  const helperChips = isFood
+    ? ["Meal scan", "Macro balance", "Recovery fuel"]
+    : isRecovery
+      ? ["Scan report", "Pain notes", "Safe movement"]
+      : ["Custom plan", "Next step", "Adaptive reps"];
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className="overflow-hidden rounded-3xl"
+      style={({ pressed }) => ({
+        ...containerStyle,
+        transform: [{ scale: pressed ? 0.985 : 1 }],
+      })}
+    >
+      {isFood ? (
+        <View
+          className="gap-5 p-3 border border-dashed rounded-[28px]"
+          style={{
+            borderColor: theme.border,
+            backgroundColor: theme.accentSoft,
+          }}
+        >
+          {/* TOP LABEL ROW */}
+          <View className="flex-row items-center justify-between gap-3">
+            <View
+              className="rounded-full px-3 py-1"
+              style={{
+                backgroundColor: theme.surface,
+              }}
+            >
+              <Text
+                className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                style={{ color: theme.text }}
+              >
+                {label}
+              </Text>
+            </View>
+
+            <View
+              className="rounded-full px-3 py-1"
+              style={{
+                backgroundColor: theme.surface,
+              }}
+            >
+              <Text
+                className="text-[10px] font-semibold"
+                style={{ color: theme.textMuted }}
+              >
+                Quick scan loop
+              </Text>
+            </View>
+          </View>
+
+          {/* MAIN CONTENT CARD */}
+          <View
+            className="rounded-[28px] p-5"
+            style={{
+              backgroundColor: theme.surface,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <Text
+              className="text-[22px] font-semibold leading-7"
+              style={{ color: theme.text }}
+            >
+              {title}
+            </Text>
+
+            <Text
+              className="mt-2 text-sm leading-6"
+              style={{ color: theme.textMuted }}
+            >
+              {description}
+            </Text>
+          </View>
+
+          {/* CHIPS */}
+          <View className="flex-row flex-wrap gap-2">
+            {helperChips.map((chip) => (
+              <View
+                key={chip}
+                className="rounded-full px-3 py-2 border"
+                style={{
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                }}
+              >
+                <Text
+                  className="text-xs font-medium"
+                  style={{ color: theme.text }}
+                >
+                  {chip}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* CTA */}
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <NeonButton label={ctaLabel} onPress={onPress} />
+            </View>
+            <View className="flex-1">
+              <NeonButton
+                label="Open now"
+                onPress={onPress}
+                variant="secondary"
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      {isRecovery ? (
+        <View
+          className="gap-5 p-3 border rounded-[28px]"
+          style={{
+            borderColor: theme.border,
+            backgroundColor: theme.surface,
+          }}
+        >
+          {/* TOP ROW */}
+          <View className="flex-row items-center justify-between gap-3">
+            <View
+              className="rounded-full px-3 py-1"
+              style={{
+                backgroundColor: theme.surfaceMuted,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <Text
+                className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                style={{ color: theme.text }}
+              >
+                {label}
+              </Text>
+            </View>
+
+            <Text
+              className="text-xs font-medium"
+              style={{ color: theme.textMuted }}
+            >
+              safer movement
+            </Text>
+          </View>
+
+          {/* MAIN CONTENT */}
+          <View
+            className="rounded-[28px] p-5 border"
+            style={{
+              backgroundColor: theme.surfaceMuted,
+              borderColor: theme.border,
+            }}
+          >
+            <Text
+              className="text-[22px] font-semibold leading-7"
+              style={{ color: theme.text }}
+            >
+              {title}
+            </Text>
+
+            <Text
+              className="mt-2 text-sm leading-6"
+              style={{ color: theme.textMuted }}
+            >
+              {description}
+            </Text>
+
+            {/* CHIPS */}
+            <View className="mt-5 gap-2">
+              {helperChips.map((chip) => (
+                <View
+                  key={chip}
+                  className="rounded-2xl px-3 py-3 border"
+                  style={{
+                    backgroundColor: theme.surface,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <Text
+                    className="text-sm font-medium"
+                    style={{ color: theme.text }}
+                  >
+                    {chip}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* CTA */}
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <NeonButton label={ctaLabel} onPress={onPress} />
+            </View>
+            <View className="flex-1">
+              <NeonButton
+                label="Open now"
+                onPress={onPress}
+                variant="secondary"
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      {isTrainer ? (
+        <View
+          className="gap-5 p-3 border border-dashed rounded-[28px]"
+          style={{
+            borderColor: theme.border,
+            backgroundColor: theme.accentSoft,
+          }}
+        >
+          {/* TOP ROW */}
+          <View className="flex-row items-center justify-between gap-3">
+            <View
+              className="rounded-full px-3 py-1"
+              style={{
+                backgroundColor: theme.surface,
+              }}
+            >
+              <Text
+                className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                style={{ color: theme.text }}
+              >
+                {label}
+              </Text>
+            </View>
+
+            <View
+              className="rounded-full px-3 py-1"
+              style={{
+                backgroundColor: theme.surface,
+              }}
+            >
+              <Text
+                className="text-[10px] font-semibold"
+                style={{ color: theme.textMuted }}
+              >
+                adaptive plan
+              </Text>
+            </View>
+          </View>
+
+          {/* MAIN CONTENT */}
+          <View
+            className="rounded-[28px] p-5 border"
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            }}
+          >
+            <Text
+              className="text-[22px] font-semibold leading-7"
+              style={{ color: theme.text }}
+            >
+              {title}
+            </Text>
+
+            <Text
+              className="mt-2 text-sm leading-6"
+              style={{ color: theme.textMuted }}
+            >
+              {description}
+            </Text>
+
+            {/* PROGRESS BAR */}
+            <View
+              className="mt-5 h-2 overflow-hidden rounded-full"
+              style={{ backgroundColor: theme.surfaceMuted }}
+            >
+              <View
+                className="h-full w-[68%] rounded-full"
+                style={{ backgroundColor: theme.accent }}
+              />
+            </View>
+
+            {/* CHIPS */}
+            <View className="mt-5 flex-row flex-wrap gap-2">
+              {helperChips.map((chip) => (
+                <View
+                  key={chip}
+                  className="rounded-full px-3 py-2 border"
+                  style={{
+                    backgroundColor: theme.surface,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <Text
+                    className="text-xs font-medium"
+                    style={{ color: theme.text }}
+                  >
+                    {chip}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* CTA */}
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <NeonButton label={ctaLabel} onPress={onPress} />
+            </View>
+            <View className="flex-1">
+              <NeonButton
+                label="Open now"
+                onPress={onPress}
+                variant="secondary"
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+function FeatureBannerStack({
+  theme,
+  mode,
+}: {
+  theme: ReturnType<typeof useAppTheme>["theme"];
+  mode: ReturnType<typeof useAppTheme>["mode"];
+}) {
+  return (
+    <View className="gap-4">
+      <FeatureBanner
+        label="Food IQ"
+        title="Scan meals, compare intake, and get smarter recovery fuel."
+        description="Fast meal analysis built for your activity loop, with cleaner guidance for calories, balance, and safer choices."
+        ctaLabel="Open Food IQ"
+        variant="food"
+        onPress={() => router.push("/(app)/(tabs)/food-intelligence")}
+        theme={theme}
+        mode={mode}
+      />
+      <FeatureBanner
+        label="Recovery AI"
+        title="Turn injury symptoms into safer exercise guidance."
+        description="Upload a report, scan the affected area, or describe pain to get step-by-step recovery support."
+        ctaLabel="Recovery AI"
+        variant="recovery"
+        onPress={() => router.push("/(app)/recovery-ai")}
+        theme={theme}
+        mode={mode}
+      />
+      <FeatureBanner
+        label="AI Trainer"
+        title="Build a personalized workout plan from your goal and energy."
+        description="Generate a smarter session, follow the next step, and keep your training flow tight and adaptive."
+        ctaLabel="AI Trainer"
+        variant="trainer"
+        onPress={() => router.push("/(app)/(tabs)/ai-trainer")}
+        theme={theme}
+        mode={mode}
+      />
     </View>
   );
 }
@@ -767,14 +1225,17 @@ export default function HomeScreen() {
           />
         </View>
 
+        <FeatureBannerStack theme={theme} mode={mode} />
+
         <View
-          className="rounded-3xl border p-4"
+          className="rounded-3xl border p-3"
           style={getRaisedCardStyle(theme, mode)}
         >
-          <SectionHeader title="Territory map" theme={theme} />
+          <SectionHeader title="Territory intelligence" theme={theme} />
 
+          {/* 🗺️ MAP (still the hero) */}
           <View
-            className="mt-4 h-60 overflow-hidden rounded-3xl border"
+            className="mt-3 h-48 overflow-hidden rounded-2xl border"
             style={getInnerCardStyle(theme, mode)}
           >
             <HomeTerritoryMap
@@ -787,35 +1248,71 @@ export default function HomeScreen() {
             />
           </View>
 
-          <View className="mt-4 flex-row gap-3">
-            <View
-              className="flex-1 rounded-2xl border px-4 py-3"
-              style={getInnerCardStyle(theme, mode)}
+          {/* 📊 MINI STAT CARDS */}
+          <View className="mt-3 flex-row gap-2">
+            <MiniStatCard
+              label="Captured"
+              value={`${formatAreaKm2(userArea)} km²`}
+              icon="map-outline"
+              theme={theme}
+              mode={mode}
+            />
+
+            <MiniStatCard
+              label="Safe zones"
+              value={`${activeSafeZones}`}
+              icon="shield-checkmark-outline"
+              theme={theme}
+              mode={mode}
+            />
+
+            <MiniStatCard
+              label="Rivals"
+              value={`${rivalsCount}`}
+              icon="people-outline"
+              theme={theme}
+              mode={mode}
+            />
+          </View>
+
+          {/* 📈 PROGRESS / INSIGHT */}
+          <View
+            className="mt-3 rounded-2xl border px-4 py-3"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Text className="text-[11px]" style={{ color: theme.textMuted }}>
+              Territory progress
+            </Text>
+
+            <Text
+              className="mt-1 text-sm font-medium"
+              style={{ color: theme.text }}
             >
-              <Text className="text-[11px]" style={{ color: theme.textMuted }}>
-                Safe pockets
-              </Text>
-              <Text
-                className="mt-1 text-base font-semibold"
-                style={{ color: theme.text }}
-              >
-                {activeSafeZones}
-              </Text>
-            </View>
+              You're ahead of {Math.max(0, rivalsCount - 2)} nearby players
+            </Text>
+
             <View
-              className="flex-1 rounded-2xl border px-4 py-3"
-              style={getInnerCardStyle(theme, mode)}
+              className="mt-2 h-2 overflow-hidden rounded-full"
+              style={{ backgroundColor: theme.surfaceMuted }}
             >
-              <Text className="text-[11px]" style={{ color: theme.textMuted }}>
-                Captured area
-              </Text>
-              <Text
-                className="mt-1 text-base font-semibold"
-                style={{ color: theme.text }}
-              >
-                {formatAreaKm2(userArea)} km2
-              </Text>
+              <View
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(100, (userArea / 5000) * 100)}%`,
+                  backgroundColor: theme.accent,
+                }}
+              />
             </View>
+
+            <Text
+              className="mt-2 text-[11px]"
+              style={{ color: theme.textMuted }}
+            >
+              Expand 1.2 km² more to reach next zone tier
+            </Text>
           </View>
         </View>
 
