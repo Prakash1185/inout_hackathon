@@ -64,6 +64,8 @@ export default function ProtectedLayout() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="welcome" />
+      <Stack.Screen name="recovery-ai" />
+      <Stack.Screen name="recovery/[exerciseId]" />
       <Stack.Screen name="activity/index" />
       <Stack.Screen name="activity/result" />
       <Stack.Screen name="events/[id]" />

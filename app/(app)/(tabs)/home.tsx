@@ -17,10 +17,10 @@ import {
 
 import type { LeaderboardEntry } from "@/shared/types";
 import { BottomActionSheet } from "@/src/components/BottomActionSheet";
-import { demoNotifications } from "@/src/constants/notifications";
 import { HomeTerritoryMap } from "@/src/components/maps/HomeTerritoryMap";
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
+import { demoNotifications } from "@/src/constants/notifications";
 import { getMapOverview } from "@/src/services/activity.service";
 import { getActiveEvent } from "@/src/services/event.service";
 import {
@@ -513,6 +513,11 @@ export default function HomeScreen() {
       label: "Leaderboard",
       icon: "trophy-outline",
       onPress: () => router.push("/(app)/(tabs)/leaderboard"),
+    },
+    {
+      label: "Recovery AI",
+      icon: "fitness-outline",
+      onPress: () => router.push("/(app)/recovery-ai"),
     },
     {
       label: "Events",
