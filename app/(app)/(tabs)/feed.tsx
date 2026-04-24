@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { EventsPanel } from "@/app/(app)/(tabs)/events";
@@ -13,8 +13,19 @@ type FeedTab = "events" | "rankings" | "updates";
 
 export default function FeedScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ tab?: string }>();
   const { theme } = useAppTheme();
   const [activeTab, setActiveTab] = useState<FeedTab>("rankings");
+
+  useEffect(() => {
+    if (
+      params.tab === "events" ||
+      params.tab === "rankings" ||
+      params.tab === "updates"
+    ) {
+      setActiveTab(params.tab);
+    }
+  }, [params.tab]);
 
   return (
     <Screen>

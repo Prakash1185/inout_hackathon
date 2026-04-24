@@ -16,6 +16,7 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.string().default("*"),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default("gemini-2.5-flash-lite"),
+  VISION_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

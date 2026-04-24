@@ -117,7 +117,7 @@ export function NeonButton({
                 ? buttonTheme.primaryHoverStart
                 : buttonTheme.primaryStart,
               hovered ? buttonTheme.primaryHoverEnd : buttonTheme.primaryEnd,
-            ]
+            ] as const
           : [
               hovered
                 ? buttonTheme.secondaryHoverStart
@@ -125,7 +125,7 @@ export function NeonButton({
               hovered
                 ? buttonTheme.secondaryHoverEnd
                 : buttonTheme.secondaryEnd,
-            ];
+            ] as const;
 
         const borderColor = primary
           ? buttonTheme.primaryStroke
@@ -246,7 +246,7 @@ export function NeonButton({
                     highlightColor,
                     "rgba(255,255,255,0.05)",
                     "transparent",
-                  ]}
+                  ] as const}
                   start={{ x: 0.5, y: 0 }}
                   end={{ x: 0.5, y: 1 }}
                   className="absolute inset-x-[1px] top-[1px] h-[54%] rounded-full"

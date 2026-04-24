@@ -45,7 +45,7 @@ export default function ProtectedLayout() {
     );
   }
 
-  const inWelcomeScreen = segments.includes("welcome");
+  const inWelcomeScreen = segments.some((segment) => segment === "welcome");
   const hasCompletedOnboarding = hasCompletedOnboardingForUser(
     identity.clerkUserId,
   );
@@ -64,10 +64,13 @@ export default function ProtectedLayout() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="welcome" />
+      <Stack.Screen name="recovery-ai" />
+      <Stack.Screen name="recovery/[exerciseId]" />
       <Stack.Screen name="activity/index" />
       <Stack.Screen name="activity/result" />
       <Stack.Screen name="events/[id]" />
       <Stack.Screen name="events/host" />
+      <Stack.Screen name="notifications" />
       <Stack.Screen name="trainer/[id]" />
       <Stack.Screen name="updates/[id]" />
       <Stack.Screen name="profile/exercises-history" />

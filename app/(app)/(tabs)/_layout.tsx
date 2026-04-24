@@ -44,9 +44,15 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="feed"
         options={{
-          title: "Feed",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="food-intelligence"
+        options={{
+          title: "Food IQ",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="newspaper" color={color} size={size} />
+            <Ionicons name="nutrition-outline" color={color} size={size} />
           ),
         }}
       />
