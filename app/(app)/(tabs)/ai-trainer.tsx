@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -8,12 +8,12 @@ import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
 import {
     buildTrainerPlan,
+    getExerciseById,
     getLevelProgress,
     type GeneratedExercise,
     type MuscleTarget,
-    type TrainerIconName,
 } from "@/src/constants/ai-trainer";
-  import { generateTrainerPlanFromAi } from "@/src/services/ai-trainer.service";
+import { generateTrainerPlanFromAi } from "@/src/services/ai-trainer.service";
 import { useAuthStore } from "@/src/store/auth-store";
 import { useAppTheme } from "@/src/store/ui-store";
 
@@ -474,12 +474,12 @@ export default function AiTrainerScreen() {
         <View className="mt-5 gap-3">
           {plan.map((exercise) => {
             const state = getCardState(exercise, currentExercise, completedIds);
-            const iconName = exercise.icon as TrainerIconName;
+            const exerciseDetail = getExerciseById(exercise.exerciseId);
 
             return (
               <Pressable
                 key={exercise.planId}
-                className="rounded-2xl border px-3 py-3"
+                className="rounded-[28px] border px-3 py-3"
                 style={{
                   borderColor:
                     state === "Current" ? theme.accent : theme.border,
@@ -500,25 +500,35 @@ export default function AiTrainerScreen() {
                   })
                 }
               >
-                <View className="flex-row items-center gap-3">
-                  <View
-                    className="h-14 w-14 items-center justify-center rounded-xl"
-                    style={{ backgroundColor: theme.surfaceMuted }}
-                  >
-                    <Ionicons
-                      name={iconName}
-                      size={24}
-                      color={
-                        state === "Current" ? theme.accent : theme.textMuted
-                      }
+                <View className="flex-row items-center gap-4">
+                  {exerciseDetail?.image ? (
+                    <Image
+                      source={exerciseDetail.image}
+                      contentFit="cover"
+                      style={{
+                        width: 96,
+                        height: 96,
+                        borderRadius: 22,
+                        backgroundColor: theme.surfaceMuted,
+                      }}
                     />
-                  </View>
+                  ) : (
+                    <View
+                      style={{
+                        width: 96,
+                        height: 96,
+                        borderRadius: 22,
+                        backgroundColor: theme.surfaceMuted,
+                      }}
+                    />
+                  )}
 
                   <View className="flex-1">
-                    <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-start justify-between gap-3">
                       <Text
-                        className="text-base font-semibold"
+                        className="flex-1 text-base font-semibold"
                         style={{ color: theme.text }}
+                        numberOfLines={2}
                       >
                         {exercise.title}
                       </Text>
@@ -543,6 +553,16 @@ export default function AiTrainerScreen() {
                     >
                       {exercise.primaryTarget} | {exercise.difficulty}
                     </Text>
+
+                    {exerciseDetail?.description ? (
+                      <Text
+                        className="mt-2 text-xs leading-5"
+                        style={{ color: theme.textMuted }}
+                        numberOfLines={3}
+                      >
+                        {exerciseDetail.description}
+                      </Text>
+                    ) : null}
 
                     <View className="mt-2 flex-row items-center justify-between">
                       <Text

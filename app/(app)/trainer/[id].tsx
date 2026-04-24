@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
@@ -91,21 +92,46 @@ export default function TrainerExerciseDetailScreen() {
           className="mt-4 rounded-3xl border p-4"
           style={{ borderColor: theme.border, backgroundColor: theme.surface }}
         >
-          <View className="flex-row items-center justify-between">
-            <Text className="text-2xl font-bold" style={{ color: theme.text }}>
-              {exercise.title}
-            </Text>
-            <Text
-              className="rounded-full px-2 py-1 text-[10px] font-semibold"
-              style={{ color: "#FFFFFF", backgroundColor: theme.accent }}
-            >
-              {exercise.primaryTarget}
-            </Text>
-          </View>
+          <View
+            className="overflow-hidden rounded-[28px] border px-4 py-5"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surfaceMuted,
+            }}
+          >
+            <Image
+              source={exercise.image}
+              contentFit="cover"
+              style={{
+                alignSelf: "center",
+                width: 256,
+                height: 256,
+                borderRadius: 24,
+                backgroundColor: theme.surface,
+              }}
+            />
 
-          <Text className="mt-2 text-sm" style={{ color: theme.textMuted }}>
-            {exercise.description}
-          </Text>
+            <View className="mt-5 items-center">
+              <Text
+                className="rounded-full px-3 py-1 text-[11px] font-semibold"
+                style={{ color: "#FFFFFF", backgroundColor: theme.accent }}
+              >
+                {exercise.primaryTarget}
+              </Text>
+              <Text
+                className="mt-4 text-center text-2xl font-bold"
+                style={{ color: theme.text }}
+              >
+                {exercise.title}
+              </Text>
+              <Text
+                className="mt-2 text-center text-sm leading-6"
+                style={{ color: theme.textMuted }}
+              >
+                {exercise.description}
+              </Text>
+            </View>
+          </View>
 
           <View className="mt-4 flex-row flex-wrap gap-2">
             <View
@@ -182,7 +208,10 @@ export default function TrainerExerciseDetailScreen() {
 
           <View
             className="mt-5 rounded-2xl border p-3"
-            style={{ borderColor: theme.border }}
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surfaceMuted,
+            }}
           >
             <Text
               className="text-sm font-semibold"
@@ -212,7 +241,10 @@ export default function TrainerExerciseDetailScreen() {
 
           <View
             className="mt-4 rounded-2xl border p-3"
-            style={{ borderColor: theme.border }}
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surfaceMuted,
+            }}
           >
             <Text className="text-xs" style={{ color: theme.textMuted }}>
               Equipment
