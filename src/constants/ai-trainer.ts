@@ -20,6 +20,7 @@ export type TrainerIconName =
 
 export interface ExerciseTemplate {
   id: string;
+  aliases?: string[];
   title: string;
   primaryTarget: MuscleTarget;
   targets: MuscleTarget[];
@@ -31,6 +32,7 @@ export interface ExerciseTemplate {
   tempo: string;
   xpBase: number;
   icon: TrainerIconName;
+  image: number;
   description: string;
   instructions: string[];
 }
@@ -60,6 +62,7 @@ export interface TrainerFormInput {
 export const exerciseLibrary: ExerciseTemplate[] = [
   {
     id: "ex-push-lean",
+    aliases: ["ex-chest-01"],
     title: "Tempo Push-Up Ladder",
     primaryTarget: "Chest",
     targets: ["Chest", "Shoulders", "Arms"],
@@ -71,6 +74,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
     tempo: "3-1-1",
     xpBase: 28,
     icon: "barbell-outline",
+    image: require("../../assets/exercise/chest.png"),
     description:
       "Controlled push-up pattern that improves chest activation and shoulder stability.",
     instructions: [
@@ -82,6 +86,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   },
   {
     id: "ex-row-pack",
+    aliases: ["ex-back-01"],
     title: "Backline Towel Rows",
     primaryTarget: "Back",
     targets: ["Back", "Arms", "Core"],
@@ -93,6 +98,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
     tempo: "2-1-2",
     xpBase: 32,
     icon: "body-outline",
+    image: require("../../assets/exercise/latpulldown.png"),
     description:
       "Horizontal pull variation to build lats and upper-back endurance with minimal equipment.",
     instructions: [
@@ -104,6 +110,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   },
   {
     id: "ex-leg-burn",
+    aliases: ["ex-legs-01"],
     title: "Split Squat Pulse",
     primaryTarget: "Legs",
     targets: ["Legs", "Core"],
@@ -115,6 +122,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
     tempo: "2-1-1",
     xpBase: 34,
     icon: "fitness-outline",
+    image: require("../../assets/exercise/squat.png"),
     description:
       "Single-leg control drill for quads and glutes with balance-focused posture.",
     instructions: [
@@ -126,6 +134,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   },
   {
     id: "ex-core-lock",
+    aliases: ["ex-core-01"],
     title: "Hollow Hold March",
     primaryTarget: "Core",
     targets: ["Core", "Full Body"],
@@ -137,6 +146,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
     tempo: "steady",
     xpBase: 26,
     icon: "shield-checkmark-outline",
+    image: require("../../assets/exercise/plank.png"),
     description:
       "Core stability sequence to reinforce anti-extension strength and breathing control.",
     instructions: [
@@ -148,6 +158,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   },
   {
     id: "ex-shoulder-flow",
+    aliases: ["ex-shoulders-01"],
     title: "Pike Shoulder Press",
     primaryTarget: "Shoulders",
     targets: ["Shoulders", "Arms", "Core"],
@@ -159,6 +170,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
     tempo: "2-0-2",
     xpBase: 36,
     icon: "speedometer-outline",
+    image: require("../../assets/exercise/chest_press.png"),
     description:
       "Vertical press pattern to build overhead strength and shoulder control.",
     instructions: [
@@ -170,6 +182,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   },
   {
     id: "ex-arm-finish",
+    aliases: ["ex-arms-01"],
     title: "Triceps + Biceps Density",
     primaryTarget: "Arms",
     targets: ["Arms", "Shoulders"],
@@ -181,6 +194,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
     tempo: "1-0-2",
     xpBase: 24,
     icon: "flame-outline",
+    image: require("../../assets/exercise/biceps.png"),
     description:
       "High-quality arm finisher with density focus and strict form.",
     instructions: [
@@ -192,6 +206,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   },
   {
     id: "ex-full-sprint",
+    aliases: ["ex-full-01"],
     title: "Bodyweight Power Circuit",
     primaryTarget: "Full Body",
     targets: ["Full Body", "Legs", "Core", "Shoulders"],
@@ -203,6 +218,7 @@ export const exerciseLibrary: ExerciseTemplate[] = [
     tempo: "explosive",
     xpBase: 40,
     icon: "walk-outline",
+    image: require("../../assets/exercise/cardio.png"),
     description:
       "Athletic blend of squat thrusts, lunges, and plank transitions.",
     instructions: [
@@ -219,7 +235,9 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export function getExerciseById(id: string) {
-  return exerciseLibrary.find((item) => item.id === id);
+  return exerciseLibrary.find(
+    (item) => item.id === id || item.aliases?.includes(id),
+  );
 }
 
 export function buildTrainerPlan(input: TrainerFormInput): GeneratedExercise[] {
