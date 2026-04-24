@@ -11,7 +11,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Velora uses your location to track activities and map captured territory."
+        "NSLocationWhenInUseUsageDescription": "Velora uses your location to track activities and map captured territory.",
+        "NSCameraUsageDescription": "Velora uses your camera so you can scan meals for Food Intelligence.",
+        "NSPhotoLibraryUsageDescription": "Velora uses your photo library so you can upload meal photos for Food Intelligence."
       }
     },
     "android": {
@@ -21,7 +23,12 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -47,6 +54,13 @@
         }
       ],
       "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Velora uses your photo library so you can upload meal photos for Food Intelligence.",
+          "cameraPermission": "Velora uses your camera so you can scan meals for Food Intelligence."
+        }
+      ],
       "expo-web-browser"
     ],
     "experiments": {

@@ -18,7 +18,6 @@ import {
 import type { LeaderboardEntry } from "@/shared/types";
 import { BottomActionSheet } from "@/src/components/BottomActionSheet";
 import { demoNotifications } from "@/src/constants/notifications";
-// eslint-disable-next-line import/no-unresolved
 import { HomeTerritoryMap } from "@/src/components/maps/HomeTerritoryMap";
 import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
@@ -367,12 +366,13 @@ export default function HomeScreen() {
       return;
     }
 
+    const activeLocation = currentLocation;
     const controller = new AbortController();
 
     async function loadWeatherAndAir() {
       setWeatherUpdating(true);
 
-      const { latitude, longitude } = currentLocation;
+      const { latitude, longitude } = activeLocation;
 
       const weatherUrl =
         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}` +
@@ -501,6 +501,12 @@ export default function HomeScreen() {
   );
   const fallbackRank = Math.max(2, rivalsCount + 4);
   const userRank = userRanking?.rank ?? fallbackRank;
+  const mapCurrentLocation = currentLocation
+    ? {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+      }
+    : null;
 
   const drawerItems: DrawerItem[] = [
     {
@@ -674,7 +680,7 @@ export default function HomeScreen() {
                 Level
               </Text>
               <Text
-                className="mt-1 text-xl font-semibold"
+                className="mt-1 text-xl font-semibold text-center"
                 style={{ color: theme.text }}
               >
                 {profile?.level ?? 1}
@@ -768,14 +774,7 @@ export default function HomeScreen() {
           >
             <HomeTerritoryMap
               region={region}
-              currentLocation={
-                currentLocation
-                  ? {
-                      latitude: currentLocation.latitude,
-                      longitude: currentLocation.longitude,
-                    }
-                  : null
-              }
+              currentLocation={mapCurrentLocation}
               userPolygons={territoryPolygons}
               userCenters={territoryCenters}
               othersPolygons={othersPolygons}

@@ -45,7 +45,7 @@ export default function ProtectedLayout() {
     );
   }
 
-  const inWelcomeScreen = segments.includes("welcome");
+  const inWelcomeScreen = segments.some((segment) => segment === "welcome");
   const hasCompletedOnboarding = hasCompletedOnboardingForUser(
     identity.clerkUserId,
   );

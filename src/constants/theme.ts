@@ -1,3 +1,39 @@
+export type ThemeMode = "dark" | "light";
+
+export interface AppButtonPalette {
+  primaryStart: string;
+  primaryEnd: string;
+  primaryHoverStart: string;
+  primaryHoverEnd: string;
+  primaryStroke: string;
+  primaryGlow: string;
+  primaryDepth: string;
+  primaryHighlight: string;
+  primaryLabel: string;
+  secondaryStart: string;
+  secondaryEnd: string;
+  secondaryHoverStart: string;
+  secondaryHoverEnd: string;
+  secondaryStroke: string;
+  secondaryGlow: string;
+  secondaryDepth: string;
+  secondaryHighlight: string;
+  secondaryLabel: string;
+  iconChip: string;
+}
+
+export interface AppThemePalette {
+  background: string;
+  surface: string;
+  surfaceMuted: string;
+  border: string;
+  text: string;
+  textMuted: string;
+  accent: string;
+  accentSoft: string;
+  button: AppButtonPalette;
+}
+
 export const themes: Record<ThemeMode, AppThemePalette> = {
   dark: {
     background: "#0E0C14",
