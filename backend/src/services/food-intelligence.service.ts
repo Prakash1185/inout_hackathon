@@ -203,182 +203,71 @@ function toDetectedDetail(
   };
 }
 
-async function detectLabelsFromVision(
-  imageBase64: string,
-): Promise<Array<{ text: string; score: number }>> {
-  if (!env.VISION_API_KEY) {
-    return [];
-  }
-
-  const response = await fetch(
-    `https://vision.googleapis.com/v1/images:annotate?key=${env.VISION_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        requests: [
-          {
-            image: { content: imageBase64 },
-            features: [
-              { type: "LABEL_DETECTION", maxResults: 16 },
-              { type: "OBJECT_LOCALIZATION", maxResults: 10 },
-            ],
-          },
-        ],
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    return [];
-  }
-
-  const payload = (await response.json()) as {
-    responses?: Array<{
-      labelAnnotations?: Array<{ description?: string; score?: number }>;
-      localizedObjectAnnotations?: Array<{ name?: string; score?: number }>;
-    }>;
-  };
-
-  const block = payload.responses?.[0];
-  const labels = (block?.labelAnnotations ?? [])
-    .map((entry) => ({
-      text: entry.description ?? "",
-      score: Number(entry.score ?? 0),
-    }))
-    .filter((entry) => entry.text.trim().length > 0);
-
-  const objects = (block?.localizedObjectAnnotations ?? [])
-    .map((entry) => ({
-      text: entry.name ?? "",
-      score: Number(entry.score ?? 0),
-    }))
-    .filter((entry) => entry.text.trim().length > 0);
-
-  return [...labels, ...objects].sort((a, b) => b.score - a.score).slice(0, 20);
-}
-
-function mapLabelsToFoods(
-  labels: Array<{ text: string; score: number }>,
-): Array<{ name: string; confidence: number }> {
-  const bucket = new Map<string, number>();
-
-  for (const label of labels) {
-    const normalizedLabel = label.text.trim().toLowerCase();
-    const matchedItems = foodCatalog.filter((item) =>
-      item.aliases.some(
-        (alias) =>
-          normalizedLabel.includes(alias) || alias.includes(normalizedLabel),
-      ),
-    );
-
-    if (!matchedItems.length) {
-      continue;
-    }
-
-    for (const matched of matchedItems) {
-      const previous = bucket.get(matched.name) ?? 0;
-      bucket.set(matched.name, Math.max(previous, label.score));
-    }
-  }
-
-  return Array.from(bucket.entries())
-    .map(([name, confidence]) => ({ name, confidence }))
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 6);
-}
-
-function deriveFoodsFromLabelHeuristics(
-  labels: Array<{ text: string; score: number }>,
-): Array<{ name: string; confidence: number }> {
-  const mapped = new Map<string, number>();
-
-  for (const label of labels) {
-    const text = label.text.trim().toLowerCase();
-
-    if (/rice|grain|pilaf|biryani|pulao|fried rice/.test(text)) {
-      mapped.set("Rice", Math.max(mapped.get("Rice") ?? 0, label.score));
-    }
-    if (/roti|chapati|naan|flatbread|bread/.test(text)) {
-      mapped.set("Roti", Math.max(mapped.get("Roti") ?? 0, label.score));
-    }
-    if (/dal|lentil|sambar|stew|soup/.test(text)) {
-      mapped.set("Dal", Math.max(mapped.get("Dal") ?? 0, label.score));
-    }
-    if (/paneer|cottage cheese|cheese/.test(text)) {
-      mapped.set("Paneer", Math.max(mapped.get("Paneer") ?? 0, label.score));
-    }
-    if (/vegetable|veggie|curry|salad/.test(text)) {
-      mapped.set("Sabzi", Math.max(mapped.get("Sabzi") ?? 0, label.score));
-    }
-    if (/curd|yogurt|raita/.test(text)) {
-      mapped.set("Curd", Math.max(mapped.get("Curd") ?? 0, label.score));
-    }
-    if (/poha/.test(text)) {
-      mapped.set("Poha", Math.max(mapped.get("Poha") ?? 0, label.score));
-    }
-    if (/idli/.test(text)) {
-      mapped.set("Idli", Math.max(mapped.get("Idli") ?? 0, label.score));
-    }
-  }
-
-  return Array.from(mapped.entries())
-    .map(([name, confidence]) => ({
-      name,
-      confidence: clamp(confidence * 0.85, 0.35, 0.95),
-    }))
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 5);
-}
-
 export async function detectFoodsFromImage(
   input: FoodDetectInput,
 ): Promise<FoodDetectResult> {
-  let labels: Array<{ text: string; score: number }> = [];
+  if (!env.GEMINI_API_KEY) {
+    return createFallbackDetectResult();
+  }
+
+  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  const model = env.GEMINI_VISION_MODEL || "gemini-2.5-flash";
+
+  const prompt = [
+    "Analyze the provided image of a meal.",
+    "Return a JSON object containing two things:",
+    "1. 'items': an array of food items detected. Each should have 'name' (e.g. 'Rice', 'Dal', 'Pizza', 'Salad') and 'confidence' (Number between 0 and 1).",
+    "2. 'labels': an array of general descriptive labels. Each should have 'label' and 'confidence' (Number between 0 and 1).",
+    "Return ONLY valid JSON. Remove markdown backticks."
+  ].join("\n");
 
   try {
-    labels = await detectLabelsFromVision(input.imageBase64);
-  } catch {
-    return createFallbackDetectResult();
+     const response = await ai.models.generateContent({
+        model,
+        contents: [
+            { role: "user", parts: [
+                { text: prompt },
+                { inlineData: { mimeType: "image/jpeg", data: input.imageBase64 } }
+            ]}
+        ],
+        config: {
+           temperature: 0.2,
+           responseMimeType: "application/json",
+           maxOutputTokens: 600
+        }
+     });
+
+     const text = (response.text ?? "").trim();
+     if (text) {
+        const candidate = text.replace(/```(?:json)?\s*([\s\S]*?)```/ig, "$1").trim();
+        const parsed = JSON.parse(candidate);
+
+        const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
+        const rawLabels = Array.isArray(parsed.labels) ? parsed.labels : [];
+
+        if (rawItems.length === 0) {
+           return createFallbackDetectResult();
+        }
+
+        const detectedDetails = rawItems.map((item: any) => toDetectedDetail(item.name || "Unknown", Number(item.confidence) || 0.5));
+        const labels = rawLabels.slice(0, 8).map((l: any) => ({ label: toTitleCase(l.label || "Food"), confidence: clamp(Number(l.confidence) || 0.5, 0, 1) }));
+
+        return {
+           detectedDetails,
+           labels,
+           source: "vision",
+           humanInLoopNote: "Gemini Vision detects food items; user confirms portions using sliders."
+        };
+     }
+  } catch (error) {
+     const errorDetails = error instanceof Error ? error.message : String(error);
+     console.error(`[Food AI Detect] Model ${model} failed:\n`, {
+       message: errorDetails,
+       fullError: error
+     });
   }
 
-  const mappedFoods = mapLabelsToFoods(labels);
-
-  if (!mappedFoods.length) {
-    const heuristicFoods = deriveFoodsFromLabelHeuristics(labels);
-
-    if (heuristicFoods.length) {
-      return {
-        detectedDetails: heuristicFoods.map((item) =>
-          toDetectedDetail(item.name, item.confidence),
-        ),
-        labels: labels.slice(0, 8).map((item) => ({
-          label: toTitleCase(item.text),
-          confidence: clamp(item.score, 0, 1),
-        })),
-        source: "vision",
-        humanInLoopNote:
-          "Vision labels were interpreted heuristically; confirm portions for best accuracy.",
-      };
-    }
-
-    return createFallbackDetectResult();
-  }
-
-  return {
-    detectedDetails: mappedFoods.map((item) =>
-      toDetectedDetail(item.name, item.confidence),
-    ),
-    labels: labels.slice(0, 8).map((item) => ({
-      label: toTitleCase(item.text),
-      confidence: clamp(item.score, 0, 1),
-    })),
-    source: "vision",
-    humanInLoopNote:
-      "Hybrid mode: image AI detects food items, user confirms portions using sliders.",
-  };
+  return createFallbackDetectResult();
 }
 
 

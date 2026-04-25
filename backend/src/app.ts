@@ -48,7 +48,7 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: 52428800 }));
 
 app.use("/api", apiRouter);
 
