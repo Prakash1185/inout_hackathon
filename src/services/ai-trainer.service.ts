@@ -29,3 +29,11 @@ export async function generateTrainerPlanFromAi(
 
   return response.data;
 }
+
+export async function analyzeTrainerPosture(payload: { imageBase64: string, exerciseTarget: string, exerciseTitle: string }) {
+  const response = await api.post<{ critique: string; status: "Good" | "Needs Correction" }>(
+    "/ai/trainer/posture",
+    payload
+  );
+  return response.data;
+}

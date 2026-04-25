@@ -1,10 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { toast } from "sonner-native";
 
+import { NeonButton } from "@/src/components/NeonButton";
 import { Screen } from "@/src/components/Screen";
 import { getExerciseById } from "@/src/constants/ai-trainer";
+import { analyzeTrainerPosture } from "@/src/services/ai-trainer.service";
 import { useAppTheme } from "@/src/store/ui-store";
 
 function parseNumber(value: string | undefined, fallback: number) {
@@ -127,6 +132,50 @@ export default function TrainerExerciseDetailScreen() {
   }>();
 
   const exercise = params.id ? getExerciseById(params.id) : undefined;
+  const [isScanning, setIsScanning] = useState(false);
+  const [postureFeedback, setPostureFeedback] = useState<{ critique: string; status: "Good" | "Needs Correction" } | null>(null);
+
+  const handlePostureScan = async () => {
+    if (!exercise) return;
+    
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permissionResult.granted) {
+        toast.error("Camera permission is required for posture scanning");
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: "images",
+        allowsEditing: false,
+        quality: 0.5,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0]?.base64) {
+        setIsScanning(true);
+        setPostureFeedback(null);
+        toast.info("Analyzing your posture...");
+
+        const feedback = await analyzeTrainerPosture({
+          imageBase64: result.assets[0].base64,
+          exerciseTarget: exercise.primaryTarget,
+          exerciseTitle: exercise.title
+        });
+
+        setPostureFeedback(feedback);
+        if (feedback.status === "Good") {
+           toast.success("Great form! Keep it up.");
+        } else {
+           toast.error("Correction needed. Check the report.");
+        }
+      }
+    } catch (e) {
+      toast.error("Failed to analyze posture");
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   if (!exercise) {
     return (
@@ -483,6 +532,46 @@ export default function TrainerExerciseDetailScreen() {
                 </Text>
               </>
             ) : null}
+          </View>
+
+          <View className="mt-5 mb-5 px-1">
+             <View className="flex-row items-center gap-2 mb-2">
+               <Ionicons name="scan-circle" size={24} color={theme.accent} />
+               <Text className="text-base font-bold" style={{color: theme.text}}>Live AI Posture Check</Text>
+             </View>
+             <Text className="text-xs mb-4 leading-5" style={{color: theme.textMuted}}>
+               Use your camera to snap a frame of your movement. Velora AI will analyze your form instantly and provide personalized feedback.
+             </Text>
+             <NeonButton 
+               label={isScanning ? "Scanning Frame..." : "Scan Posture with Camera"} 
+               onPress={handlePostureScan}
+               disabled={isScanning}
+               variant="primary"
+             />
+
+             {postureFeedback && (
+               <View 
+                  className="mt-4 rounded-xl border p-4 bg-card"
+                  style={{
+                    borderColor: postureFeedback.status === "Good" ? "#22c55e" : "#f43f5e",
+                    backgroundColor: theme.surface
+                  }}
+               >
+                 <View className="flex-row items-center gap-2 mb-2">
+                   <Ionicons 
+                      name={postureFeedback.status === "Good" ? "checkmark-circle" : "warning"} 
+                      size={20} 
+                      color={postureFeedback.status === "Good" ? "#22c55e" : "#f43f5e"} 
+                   />
+                   <Text className="font-bold text-sm" style={{color: postureFeedback.status === "Good" ? "#22c55e" : "#f43f5e"}}>
+                     {postureFeedback.status}
+                   </Text>
+                 </View>
+                 <Text className="text-sm leading-5" style={{color: theme.text}}>
+                   {postureFeedback.critique}
+                 </Text>
+               </View>
+             )}
           </View>
         </View>
       </ScrollView>

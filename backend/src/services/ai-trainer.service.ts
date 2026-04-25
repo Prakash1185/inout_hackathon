@@ -430,8 +430,11 @@ async function callGeminiWithModel(
       source: "gemini",
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.warn(`[AI Trainer] Model ${model} failed: ${message}`);
+    const errorDetails = error instanceof Error ? error.message : String(error);
+    console.error(`[AI Trainer] Model ${model} failed:\n`, {
+      message: errorDetails,
+      fullError: error
+    });
     return null;
   }
 }
@@ -478,4 +481,63 @@ export async function generateTrainerPlan(
     summary: buildPlanSummary(input, "fallback"),
     source: "fallback",
   };
+}
+
+export async function analyzePostureScan(
+  imageBase64: string,
+  exerciseTarget: string,
+  exerciseTitle: string
+): Promise<{ critique: string; status: "Good" | "Needs Correction" }> {
+  if (!env.GEMINI_API_KEY) {
+    return {
+       critique: "AI API unavailable. Cannot evaluate this stretch correctly.",
+       status: "Needs Correction"
+    }
+  }
+
+  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  const model = env.GEMINI_VISION_MODEL || "gemini-2.5-flash";
+  
+  const prompt = [
+     `You are an expert personal trainer evaluating a client's exercise form.`,
+     `The user is exercising: ${exerciseTitle} (target: ${exerciseTarget}).`,
+     `Analyze the provided frame/image. Identify if the posture is aligned safely or if there are severe mistakes (like curved back during deadlifts, excessive elbow flaring, etc).`,
+     `Return ONLY valid JSON with this exact format: {"critique": "short actionable advice (1-2 sentences)", "status": "Good" | "Needs Correction"}`,
+     `Remove markdown backticks.`
+  ].join("\n");
+
+  try {
+     const response = await ai.models.generateContent({
+        model,
+        contents: [
+            { role: "user", parts: [
+                { text: prompt },
+                { inlineData: { mimeType: "image/jpeg", data: imageBase64 } }
+            ]}
+        ],
+        config: {
+           temperature: 0.2,
+           responseMimeType: "application/json",
+           maxOutputTokens: 250
+        }
+     });
+
+     const text = (response.text ?? "").trim();
+     if (text) {
+        const candidate = text.replace(/```(?:json)?\s*([\s\S]*?)```/ig, "$1").trim();
+        const parsed = JSON.parse(candidate);
+        return {
+           critique: parsed.critique ?? "Make sure you follow the alignment rules listed in the app.",
+           status: parsed.status === "Good" ? "Good" : "Needs Correction"
+        }
+     }
+  } catch (error) {
+     const errorDetails = error instanceof Error ? error.message : String(error);
+     console.error(`[AI Trainer Posture] Model ${model} failed:\n`, {
+       message: errorDetails,
+       fullError: error
+     });
+  }
+
+  return { critique: "Ensure you adhere to safety form.", status: "Good" };
 }

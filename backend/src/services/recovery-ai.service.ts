@@ -340,7 +340,11 @@ async function tryGeminiModel(
 
     return parseGeminiJson(text) as unknown as RecoveryRecommendationResult;
   } catch (error) {
-    console.warn(`[Recovery AI] Model ${model} failed:`, error);
+    const errorDetails = error instanceof Error ? error.message : String(error);
+    console.error(`[Recovery AI] Model ${model} failed:\n`, {
+      message: errorDetails,
+      fullError: error
+    });
     return null;
   }
 }

@@ -459,7 +459,11 @@ async function getGeminiNutrientBreakdown(
           : [],
       };
     } catch (error) {
-      console.warn(`[Food AI] Model ${model} failed for nutrient breakdown:`, error);
+      const errorDetails = error instanceof Error ? error.message : String(error);
+      console.error(`[Food AI] Model ${model} failed:\n`, {
+        message: errorDetails,
+        fullError: error
+      });
     }
   }
 

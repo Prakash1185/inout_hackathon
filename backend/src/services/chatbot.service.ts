@@ -91,7 +91,11 @@ export async function chatWithVelora(
         return { reply: text, source: "gemini" };
       }
     } catch (error) {
-      console.warn(`[Chatbot] Model ${model} failed:`, error);
+      const errorDetails = error instanceof Error ? error.message : String(error);
+      console.error(`[Chatbot AI] Model ${model} failed:\n`, {
+        message: errorDetails,
+        fullError: error
+      });
     }
   }
 
