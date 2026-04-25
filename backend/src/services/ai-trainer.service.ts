@@ -371,92 +371,111 @@ function buildGeminiPrompt(input: TrainerPlanInput): string {
   ].join("\n");
 }
 
-async function callGeminiForPlan(
+function getFallbackModelList(): string[] {
+  const raw = env.GEMINI_FALLBACK_MODELS ?? "";
+  return raw
+    .split(",")
+    .map((m) => m.trim())
+    .filter((m) => m.length > 0);
+}
+
+async function callGeminiWithModel(
+  ai: InstanceType<typeof GoogleGenAI>,
+  model: string,
   input: TrainerPlanInput,
-): Promise<TrainerPlanResult> {
-  if (!env.GEMINI_API_KEY) {
-    throw new Error("Missing GEMINI_API_KEY");
+): Promise<TrainerPlanResult | null> {
+  try {
+    console.log(`[AI Trainer] Trying model: ${model}`);
+
+    const responsePromise = ai.models.generateContent({
+      model,
+      contents: buildGeminiPrompt(input),
+      config: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+        maxOutputTokens: 650,
+      },
+    });
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Gemini request timed out"));
+      }, 8_000);
+    });
+
+    const response = await Promise.race([responsePromise, timeoutPromise]);
+    const text = (response.text ?? "").trim();
+
+    if (!text) {
+      console.warn(`[AI Trainer] Model ${model} returned empty response`);
+      return null;
+    }
+
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const normalized = applyContextToPlan(
+      ensureMinimumPlanItems(normalizePlanItems(parsed.plan, input), input),
+      input,
+    );
+
+    if (normalized.length < MIN_PLAN_ITEMS) {
+      console.warn(`[AI Trainer] Model ${model} returned unusable plan`);
+      return null;
+    }
+
+    console.log(`[AI Trainer] Model ${model} succeeded with ${normalized.length} items`);
+
+    return {
+      plan: normalized,
+      summary: buildPlanSummary(input, "gemini"),
+      source: "gemini",
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.warn(`[AI Trainer] Model ${model} failed: ${message}`);
+    return null;
   }
-
-  const model = env.GEMINI_MODEL || "gemini-2.5-flash-lite";
-  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-  const requestContext = normalizeExtraContext(input.extraContext);
-
-  console.log("[AI Trainer] Request", {
-    model,
-    targetMuscle: input.targetMuscle,
-    minutes: input.minutes,
-    repetitions: input.repetitions,
-    userLevel: input.userLevel ?? 1,
-    extraContext: requestContext || "None",
-  });
-
-  const responsePromise = ai.models.generateContent({
-    model,
-    contents: buildGeminiPrompt(input),
-    config: {
-      temperature: 0.2,
-      responseMimeType: "application/json",
-      maxOutputTokens: 650,
-    },
-  });
-
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => {
-      reject(new Error("Gemini request timed out"));
-    }, 8_000);
-  });
-
-  const response = await Promise.race([responsePromise, timeoutPromise]);
-  const text = (response.text ?? "").trim();
-  console.log("[AI Trainer] Gemini raw text:", text);
-
-  if (!text) {
-    throw new Error("Empty Gemini response");
-  }
-
-  const parsed = JSON.parse(text) as Record<string, unknown>;
-  const normalized = applyContextToPlan(
-    ensureMinimumPlanItems(normalizePlanItems(parsed.plan, input), input),
-    input,
-  );
-
-  if (normalized.length < MIN_PLAN_ITEMS) {
-    throw new Error("Gemini returned unusable plan");
-  }
-
-  console.log("[AI Trainer] Normalized plan count:", normalized.length);
-  console.log("[AI Trainer] Sample coach note:", normalized[0]?.coachNote);
-
-  return {
-    plan: normalized,
-    summary: buildPlanSummary(input, "gemini"),
-    source: "gemini",
-  };
 }
 
 export async function generateTrainerPlan(
   input: TrainerPlanInput,
 ): Promise<TrainerPlanResult> {
-  try {
-    return await callGeminiForPlan(input);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("[AI Trainer] Gemini failed, using fallback:", message);
-
+  if (!env.GEMINI_API_KEY) {
     const fallbackPlan = applyContextToPlan(buildFallbackPlan(input), input);
-    const requestContext = normalizeExtraContext(input.extraContext);
-
-    console.log("[AI Trainer] Fallback plan count:", fallbackPlan.length);
-    console.log(
-      "[AI Trainer] Fallback sample note:",
-      fallbackPlan[0]?.coachNote,
-    );
-
     return {
       plan: fallbackPlan,
       summary: buildPlanSummary(input, "fallback"),
       source: "fallback",
     };
   }
+
+  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  const primaryModel = env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+
+  // 1. Try primary model
+  const primaryResult = await callGeminiWithModel(ai, primaryModel, input);
+  if (primaryResult) {
+    return primaryResult;
+  }
+
+  // 2. Try all fallback models in chain
+  const fallbackModels = getFallbackModelList().filter(
+    (m) => m !== primaryModel,
+  );
+
+  for (const fallbackModel of fallbackModels) {
+    const fallbackResult = await callGeminiWithModel(ai, fallbackModel, input);
+    if (fallbackResult) {
+      return fallbackResult;
+    }
+  }
+
+  // 3. Static fallback
+  console.error("[AI Trainer] All Gemini models failed, using static fallback");
+  const fallbackPlan = applyContextToPlan(buildFallbackPlan(input), input);
+
+  return {
+    plan: fallbackPlan,
+    summary: buildPlanSummary(input, "fallback"),
+    source: "fallback",
+  };
 }

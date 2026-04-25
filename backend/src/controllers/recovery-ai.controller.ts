@@ -20,7 +20,7 @@ const recoverySchema = z.object({
     })
     .optional(),
   notes: z.string().max(300).optional(),
-  imageBase64: z.string().optional(),
+  imageBase64: z.string().max(8_000_000).optional(),
 });
 
 export const analyzeRecoveryConditionController = asyncHandler(

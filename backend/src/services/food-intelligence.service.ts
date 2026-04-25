@@ -1,3 +1,5 @@
+import { GoogleGenAI } from "@google/genai";
+
 import { env } from "../config/env";
 
 export interface FoodDetectInput {
@@ -376,6 +378,122 @@ export async function detectFoodsFromImage(
     source: "vision",
     humanInLoopNote:
       "Hybrid mode: image AI detects food items, user confirms portions using sliders.",
+  };
+}
+
+
+
+export interface NutrientBreakdown {
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  vitamins: string[];
+}
+
+function getFallbackModelList(): string[] {
+  const raw = env.GEMINI_FALLBACK_MODELS ?? "";
+  return raw
+    .split(",")
+    .map((m) => m.trim())
+    .filter((m) => m.length > 0);
+}
+
+async function getGeminiNutrientBreakdown(
+  foodItems: Array<{ name: string; quantity: number }>,
+): Promise<NutrientBreakdown | null> {
+  if (!env.GEMINI_API_KEY) {
+    return null;
+  }
+
+  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  const prompt = [
+    "You are a nutrition expert. Analyze these food items and return ONLY valid JSON:",
+    '{"protein": number (grams), "carbs": number (grams), "fat": number (grams), "fiber": number (grams), "sugar": number (grams), "vitamins": string[] (top 5 vitamins/minerals)}',
+    "",
+    "Food items:",
+    ...foodItems.map((f) => `- ${f.name} (qty: ${f.quantity} servings)`),
+    "",
+    "Estimate total nutrients across all items combined.",
+    "No markdown or code fences.",
+  ].join("\n");
+
+  const models = [
+    env.GEMINI_MODEL || "gemini-2.5-flash-lite",
+    ...getFallbackModelList(),
+  ];
+
+  // Deduplicate models
+  const uniqueModels = [...new Set(models)];
+
+  for (const model of uniqueModels) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          temperature: 0.15,
+          responseMimeType: "application/json",
+          maxOutputTokens: 400,
+        },
+      });
+
+      const text = (response.text ?? "").trim();
+      if (!text) {
+        continue;
+      }
+
+      const blockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      const candidate = blockMatch?.[1]?.trim() ?? text;
+      const parsed = JSON.parse(candidate) as Record<string, unknown>;
+
+      return {
+        protein: clamp(Math.round(Number(parsed.protein ?? 0)), 0, 500),
+        carbs: clamp(Math.round(Number(parsed.carbs ?? 0)), 0, 800),
+        fat: clamp(Math.round(Number(parsed.fat ?? 0)), 0, 400),
+        fiber: clamp(Math.round(Number(parsed.fiber ?? 0)), 0, 100),
+        sugar: clamp(Math.round(Number(parsed.sugar ?? 0)), 0, 200),
+        vitamins: Array.isArray(parsed.vitamins)
+          ? parsed.vitamins.filter((v): v is string => typeof v === "string").slice(0, 5)
+          : [],
+      };
+    } catch (error) {
+      console.warn(`[Food AI] Model ${model} failed for nutrient breakdown:`, error);
+    }
+  }
+
+  return null;
+}
+
+export async function analyzeMealItemsWithAI(
+  items: FoodAnalyzeItemInput[],
+  options?: {
+    source?: "vision" | "manual" | "fallback";
+    labels?: FoodLabelHint[];
+    preference?: string;
+  },
+): Promise<FoodAnalysisResult & { nutrients?: NutrientBreakdown }> {
+  const baseResult = analyzeMealItems(items, options);
+
+  // Try to enrich with AI nutritional breakdown
+  const foodItems = items.map((item) => ({
+    name: item.foodName,
+    quantity: item.quantity,
+  }));
+
+  const nutrients = await getGeminiNutrientBreakdown(foodItems);
+
+  return {
+    ...baseResult,
+    nutrients: nutrients ?? {
+      protein: Math.round(baseResult.estimatedCalories * 0.12 / 4),
+      carbs: Math.round(baseResult.estimatedCalories * 0.55 / 4),
+      fat: Math.round(baseResult.estimatedCalories * 0.30 / 9),
+      fiber: Math.round(baseResult.estimatedCalories * 0.02),
+      sugar: Math.round(baseResult.estimatedCalories * 0.08 / 4),
+      vitamins: ["Vitamin A", "Vitamin C", "Iron", "Calcium"],
+    },
   };
 }
 
