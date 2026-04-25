@@ -7,6 +7,7 @@ export interface RecoveryInputPayload {
   fileName?: string;
   fileUri?: string;
   fileType?: string;
+  imageBase64?: string;
   area?: RecoveryArea;
   painLevel?: number;
   symptoms?: {

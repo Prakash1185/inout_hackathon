@@ -40,6 +40,8 @@ interface UploadedFileState {
   mimeType?: string;
 }
 
+const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024;
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -93,8 +95,19 @@ function normalizeRecommendation(
   };
 }
 
-async function readBase64IfImage(uri: string, mimeType?: string) {
-  if (!mimeType?.startsWith("image/")) {
+async function readBase64IfSupportedAttachment(
+  uri: string,
+  mimeType?: string,
+  size?: number,
+) {
+  const supportsInlineData =
+    mimeType?.startsWith("image/") || mimeType === "application/pdf";
+
+  if (!supportsInlineData) {
+    return undefined;
+  }
+
+  if (size && size > MAX_ATTACHMENT_BYTES) {
     return undefined;
   }
 
@@ -520,9 +533,11 @@ export function RecoveryEntryScreen() {
     const asset = result.assets[0];
     const mimeType = asset.mimeType ?? undefined;
     const previewUri = mimeType?.startsWith("image/") ? asset.uri : null;
-    const base64 = previewUri
-      ? await readBase64IfImage(asset.uri, mimeType)
-      : undefined;
+    const base64 = await readBase64IfSupportedAttachment(
+      asset.uri,
+      mimeType,
+      asset.size,
+    );
 
     setUploadedFile({
       name: asset.name ?? "injury-report",
@@ -564,10 +579,13 @@ export function RecoveryEntryScreen() {
     }
 
     const asset = result.assets[0];
+    const scanMimeType = asset.mimeType ?? "image/jpeg";
     setImageUri(asset.uri);
     setImageBase64(asset.base64 ?? undefined);
     setPayload((current) => ({
       ...current,
+      fileName: "scan-capture.jpg",
+      fileType: scanMimeType,
       imageUri: asset.uri,
       imageBase64: asset.base64 ?? undefined,
     }));
@@ -691,7 +709,62 @@ export function RecoveryEntryScreen() {
           >
             Choose input
           </Text>
+          <View
+            className="rounded-2xl border px-4 py-3"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surfaceMuted,
+            }}
+          >
+            <Text className="text-xs leading-5" style={{ color: theme.textMuted }}>
+              You can provide any combination of context — PDF report, image, or text description. None is required, just share what you have.
+            </Text>
+          </View>
           <View className="gap-3">
+            <Pressable
+              onPress={() => setStep("describe")}
+              className="rounded-2xl border px-4 py-4"
+              style={({ pressed }) => ({
+                borderColor: theme.accent,
+                backgroundColor: theme.surface,
+                shadowColor: "#000000",
+                shadowOpacity: 0.04,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 3 },
+                elevation: 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
+            >
+              <View className="flex-row items-start gap-4">
+                <View
+                  className="h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{
+                    backgroundColor: theme.accent,
+                  }}
+                >
+                  <Ionicons
+                    name="sparkles"
+                    size={22}
+                    color="#FFFFFF"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    Smart Recovery Input
+                  </Text>
+                  <Text
+                    className="mt-1 text-sm leading-5"
+                    style={{ color: theme.textMuted }}
+                  >
+                    Describe pain, upload report, or scan area — all optional, use what you have.
+                  </Text>
+                </View>
+              </View>
+            </Pressable>
+
             <Pressable
               onPress={openUpload}
               className="rounded-2xl border px-4 py-4"
@@ -725,14 +798,13 @@ export function RecoveryEntryScreen() {
                     className="text-base font-semibold"
                     style={{ color: theme.text }}
                   >
-                    Upload Injury Report
+                    Quick Upload Report
                   </Text>
                   <Text
                     className="mt-1 text-sm leading-5"
                     style={{ color: theme.textMuted }}
                   >
-                    Add a PDF or image report so Recovery AI can review the
-                    details.
+                    Jump straight to PDF or image upload.
                   </Text>
                 </View>
               </View>
@@ -771,60 +843,13 @@ export function RecoveryEntryScreen() {
                     className="text-base font-semibold"
                     style={{ color: theme.text }}
                   >
-                    Scan Affected Area
+                    Quick Scan Area
                   </Text>
                   <Text
                     className="mt-1 text-sm leading-5"
                     style={{ color: theme.textMuted }}
                   >
-                    Capture the area and let the assistant suggest safer
-                    movement.
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={() => setStep("describe")}
-              className="rounded-2xl border px-4 py-4"
-              style={({ pressed }) => ({
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                shadowColor: "#000000",
-                shadowOpacity: 0.04,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 3 },
-                elevation: 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              })}
-            >
-              <View className="flex-row items-start gap-4">
-                <View
-                  className="h-14 w-14 items-center justify-center rounded-2xl border"
-                  style={{
-                    borderColor: theme.border,
-                    backgroundColor: theme.surfaceMuted,
-                  }}
-                >
-                  <Ionicons
-                    name="chatbubble-ellipses-outline"
-                    size={22}
-                    color={theme.text}
-                  />
-                </View>
-                <View className="flex-1">
-                  <Text
-                    className="text-base font-semibold"
-                    style={{ color: theme.text }}
-                  >
-                    Describe Your Pain
-                  </Text>
-                  <Text
-                    className="mt-1 text-sm leading-5"
-                    style={{ color: theme.textMuted }}
-                  >
-                    Tell us where it hurts and how it feels for guided
-                    recommendations.
+                    Capture the affected area with your camera.
                   </Text>
                 </View>
               </View>
@@ -916,6 +941,123 @@ export function RecoveryEntryScreen() {
 
       {step === "describe" ? (
         <View className="gap-4">
+          {/* Optional context attachments */}
+          <View
+            className="rounded-[28px] border px-5 py-5"
+            style={softCardStyle(theme)}
+          >
+            <SectionLabel theme={theme}>Optional Attachments</SectionLabel>
+            <Text
+              className="mt-1 text-xs leading-5"
+              style={{ color: theme.textMuted }}
+            >
+              Add a PDF report or image if you have one — or skip this entirely.
+            </Text>
+
+            <View className="mt-3 flex-row gap-3">
+              <Pressable
+                onPress={openUpload}
+                className="flex-1 flex-row items-center gap-2 rounded-2xl border px-3 py-3"
+                style={({ pressed }) => ({
+                  borderColor: uploadedFile ? theme.accent : theme.border,
+                  backgroundColor: uploadedFile
+                    ? theme.surfaceMuted
+                    : theme.surface,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
+              >
+                <Ionicons
+                  name={
+                    uploadedFile
+                      ? "checkmark-circle"
+                      : "document-text-outline"
+                  }
+                  size={18}
+                  color={uploadedFile ? theme.accent : theme.textMuted}
+                />
+                <Text
+                  className="flex-1 text-xs font-medium"
+                  style={{
+                    color: uploadedFile ? theme.text : theme.textMuted,
+                  }}
+                  numberOfLines={1}
+                >
+                  {uploadedFile ? uploadedFile.name : "Upload PDF / Image"}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={openScan}
+                className="flex-1 flex-row items-center gap-2 rounded-2xl border px-3 py-3"
+                style={({ pressed }) => ({
+                  borderColor: imageUri ? theme.accent : theme.border,
+                  backgroundColor: imageUri
+                    ? theme.surfaceMuted
+                    : theme.surface,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
+              >
+                <Ionicons
+                  name={imageUri ? "checkmark-circle" : "camera-outline"}
+                  size={18}
+                  color={imageUri ? theme.accent : theme.textMuted}
+                />
+                <Text
+                  className="flex-1 text-xs font-medium"
+                  style={{
+                    color: imageUri ? theme.text : theme.textMuted,
+                  }}
+                  numberOfLines={1}
+                >
+                  {imageUri ? "Image captured" : "Scan Area"}
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Preview section */}
+            {uploadedPreviewUri || imageUri ? (
+              <View className="mt-3 flex-row gap-3">
+                {uploadedPreviewUri ? (
+                  <Image
+                    source={{ uri: uploadedPreviewUri }}
+                    className="h-28 flex-1 rounded-2xl"
+                    contentFit="cover"
+                  />
+                ) : null}
+                {imageUri ? (
+                  <Image
+                    source={{ uri: imageUri }}
+                    className="h-28 flex-1 rounded-2xl"
+                    contentFit="cover"
+                  />
+                ) : null}
+              </View>
+            ) : null}
+
+            {uploadedFile && !uploadedPreviewUri ? (
+              <View
+                className="mt-3 rounded-xl border px-3 py-2"
+                style={{
+                  borderColor: theme.border,
+                  backgroundColor: theme.surfaceMuted,
+                }}
+              >
+                <Text
+                  className="text-xs font-medium"
+                  style={{ color: theme.text }}
+                >
+                  {uploadedFile.name}
+                </Text>
+                <Text
+                  className="text-[10px]"
+                  style={{ color: theme.textMuted }}
+                >
+                  {uploadedFile.mimeType ?? "file"}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
           <View
             className="rounded-[28px] border px-5 py-5"
             style={softCardStyle(theme)}

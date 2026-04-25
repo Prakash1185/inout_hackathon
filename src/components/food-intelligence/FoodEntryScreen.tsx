@@ -125,13 +125,13 @@ export function FoodEntryScreen() {
       from === "camera"
         ? await ImagePicker.launchCameraAsync({
             allowsEditing: true,
-            quality: 0.8,
+            quality: 0.4,
             base64: true,
             mediaTypes: ["images"],
           })
         : await ImagePicker.launchImageLibraryAsync({
             allowsEditing: true,
-            quality: 0.8,
+            quality: 0.4,
             base64: true,
             mediaTypes: ["images"],
           });

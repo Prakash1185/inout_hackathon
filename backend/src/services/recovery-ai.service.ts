@@ -317,27 +317,11 @@ function normalizeRecommendation(
   };
 }
 
-export async function analyzeRecoveryCondition(
-  input: RecoveryInputPayload,
-): Promise<RecoveryRecommendationResult> {
-  if (!env.GEMINI_API_KEY) {
-    return buildFallbackRecommendation(input);
-  }
-
-  const model = env.GEMINI_MODEL || "gemini-2.5-flash-lite";
-  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-  const prompt = buildPrompt(input);
-  const parts = [{ text: prompt }];
-
-  if (input.imageBase64 && input.fileType?.startsWith("image/")) {
-    parts.push({
-      inlineData: {
-        mimeType: input.fileType,
-        data: input.imageBase64,
-      },
-    } as never);
-  }
-
+async function tryGeminiModel(
+  ai: InstanceType<typeof GoogleGenAI>,
+  model: string,
+  parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[],
+): Promise<RecoveryRecommendationResult | null> {
   try {
     const response = await ai.models.generateContent({
       model,
@@ -351,13 +335,86 @@ export async function analyzeRecoveryCondition(
 
     const text = (response.text ?? "").trim();
     if (!text) {
-      return buildFallbackRecommendation(input);
+      return null;
     }
 
-    const parsed = parseGeminiJson(text);
-    return normalizeRecommendation(parsed, input);
+    return parseGeminiJson(text) as unknown as RecoveryRecommendationResult;
   } catch (error) {
-    console.error("[Recovery AI] Gemini failed, using fallback:", error);
+    const errorDetails = error instanceof Error ? error.message : String(error);
+    console.error(`[Recovery AI] Model ${model} failed:\n`, {
+      message: errorDetails,
+      fullError: error
+    });
+    return null;
+  }
+}
+
+function getFallbackModelList(): string[] {
+  const raw = env.GEMINI_FALLBACK_MODELS ?? "";
+  return raw
+    .split(",")
+    .map((m) => m.trim())
+    .filter((m) => m.length > 0);
+}
+
+export async function analyzeRecoveryCondition(
+  input: RecoveryInputPayload,
+): Promise<RecoveryRecommendationResult> {
+  if (!env.GEMINI_API_KEY) {
     return buildFallbackRecommendation(input);
   }
+
+  const textModel = env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+  const visionModel = env.GEMINI_VISION_MODEL || "gemini-2.5-flash";
+  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  const prompt = buildPrompt(input);
+  const textParts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = [{ text: prompt }];
+  const visionParts: typeof textParts = [{ text: prompt }];
+
+  const supportsInlineData =
+    input.fileType?.startsWith("image/") ||
+    input.fileType === "application/pdf" ||
+    input.mode === "scan";
+
+  if (input.imageBase64 && supportsInlineData) {
+    visionParts.push({
+      inlineData: {
+        mimeType: input.fileType ?? "image/jpeg",
+        data: input.imageBase64,
+      },
+    });
+  }
+
+  const hasVisionData = input.imageBase64 && supportsInlineData;
+
+  // 1. Try vision model with image data
+  if (hasVisionData) {
+    const visionResult = await tryGeminiModel(ai, visionModel, visionParts);
+    if (visionResult) {
+      return normalizeRecommendation(visionResult as unknown as Record<string, unknown>, input);
+    }
+  }
+
+  // 2. Try primary text model
+  const primaryResult = await tryGeminiModel(ai, textModel, textParts);
+  if (primaryResult) {
+    return normalizeRecommendation(primaryResult as unknown as Record<string, unknown>, input);
+  }
+
+  // 3. Try all fallback models in chain
+  const fallbackModels = getFallbackModelList().filter(
+    (m) => m !== textModel && m !== visionModel,
+  );
+
+  for (const fallbackModel of fallbackModels) {
+    console.log(`[Recovery AI] Trying fallback model: ${fallbackModel}`);
+    const fallbackResult = await tryGeminiModel(ai, fallbackModel, textParts);
+    if (fallbackResult) {
+      return normalizeRecommendation(fallbackResult as unknown as Record<string, unknown>, input);
+    }
+  }
+
+  // 4. Static fallback
+  console.error("[Recovery AI] All Gemini models failed, using static fallback");
+  return buildFallbackRecommendation(input);
 }

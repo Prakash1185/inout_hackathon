@@ -16,6 +16,10 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.string().default("*"),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default("gemini-2.5-flash-lite"),
+  GEMINI_VISION_MODEL: z.string().default("gemini-2.5-flash"),
+  GEMINI_FALLBACK_MODELS: z
+    .string()
+    .default("gemini-2.5-flash-lite,gemini-2.0-flash,gemini-2.0-flash-lite,gemini-1.5-flash"),
   VISION_API_KEY: z.string().optional(),
 });
 

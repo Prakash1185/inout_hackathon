@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 
 import {
-    analyzeMealItems,
+    analyzeMealItemsWithAI,
     detectFoodsFromImage,
 } from "../services/food-intelligence.service";
 import { ApiError } from "../utils/api-error";
@@ -57,7 +57,7 @@ export const analyzeFoodMealController = asyncHandler(
 
     const body = analyzeSchema.parse(req.body);
 
-    const result = analyzeMealItems(body.items, {
+    const result = await analyzeMealItemsWithAI(body.items, {
       source: body.source,
       labels: body.labels,
       preference: body.preference,

@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 
 import {
-  generateTrainerPlan,
+  generateTrainerPlan, analyzePostureScan,
   type TrainerPlanInput,
 } from "../services/ai-trainer.service";
 import { ApiError } from "../utils/api-error";
@@ -47,4 +47,26 @@ export const generateTrainerPlanController = asyncHandler(
       source: result.source,
     });
   },
+);
+const postureRequestSchema = z.object({
+  imageBase64: z.string().min(1),
+  exerciseTarget: z.string(),
+  exerciseTitle: z.string(),
+});
+
+export const analyzeTrainerPostureController = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.authUser) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const body = postureRequestSchema.parse(req.body);
+    const result = await analyzePostureScan(
+      body.imageBase64,
+      body.exerciseTarget,
+      body.exerciseTitle
+    );
+
+    res.json(result);
+  }
 );
