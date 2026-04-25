@@ -978,6 +978,11 @@ export default function HomeScreen() {
       onPress: () => router.push("/(app)/recovery-ai"),
     },
     {
+      label: "AI Chat",
+      icon: "chatbubble-ellipses-outline",
+      onPress: () => router.push("/(app)/chatbot"),
+    },
+    {
       label: "Events",
       icon: "calendar-outline",
       onPress: () => router.push("/(app)/(tabs)/events"),
