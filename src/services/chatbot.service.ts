@@ -7,7 +7,7 @@ const GEMINI_MODELS = [
   "gemini-1.5-flash",
 ];
 
-const GEMINI_API_KEY = "AIzaSyDImvzuBq2EH6z_JI8oPXOwTfd7chrPwzQ";
+const GEMINI_API_KEY = "";
 
 const SYSTEM_PROMPT = [
   "You are Velora AI, a friendly and knowledgeable fitness, nutrition, and recovery assistant.",
