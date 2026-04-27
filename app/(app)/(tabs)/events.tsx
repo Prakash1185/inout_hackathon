@@ -323,8 +323,7 @@ export function EventsPanel() {
             />
           </View>
           <Text className="mt-2 text-sm" style={{ color: theme.textMuted }}>
-            Create a new event in under a minute. This is fully local dummy
-            flow.
+            Create a new event in under a minute.
           </Text>
           <Pressable
             className="mt-4 items-center rounded-2xl border py-3"

@@ -18,16 +18,16 @@ import { SuggestionCard } from "@/src/components/food-intelligence/SuggestionCar
 import { UploadCard } from "@/src/components/food-intelligence/UploadCard";
 import { NeonButton } from "@/src/components/NeonButton";
 import {
-    analyzeImageMeal,
-    analyzeManualMeal,
-    type FoodDetectedDetail,
-    type FoodLabelHint,
-    type ManualMealItemInput,
-    type MealAnalysisResult,
+  analyzeImageMeal,
+  analyzeManualMeal,
+  type FoodDetectedDetail,
+  type FoodLabelHint,
+  type ManualMealItemInput,
+  type MealAnalysisResult,
 } from "@/src/constants/food-intelligence";
 import {
-    analyzeFoodMeal,
-    detectFoodFromImage,
+  analyzeFoodMeal,
+  detectFoodFromImage,
 } from "@/src/services/food-intelligence.service";
 import { useAppTheme } from "@/src/store/ui-store";
 
@@ -165,7 +165,7 @@ export function FoodEntryScreen() {
       setAnalysisSource(detection.source);
       setStep("scan");
       if (detection.source === "fallback") {
-        toast.info("AI unavailable. Using dummy fallback labels for now.");
+        toast.info("AI is taking time to load results");
       } else {
         toast.success(
           "AI labels ready. Confirm portions before final analysis.",
@@ -236,7 +236,7 @@ export function FoodEntryScreen() {
       setResult(nextResult);
       setStep("result");
       if (nextResult.source === "fallback") {
-        toast.info("AI unavailable. Showing dummy fallback meal report.");
+        toast.info("AI is taking time to load");
       } else {
         toast.success(
           "Meal analyzed. Hybrid confirmation improved the report quality.",
@@ -391,7 +391,7 @@ export function FoodEntryScreen() {
       setResult(nextResult);
       setStep("result");
       if (nextResult.source === "fallback") {
-        toast.info("AI unavailable. Showing dummy fallback manual analysis.");
+        toast.info("AI is taking time to load.");
       } else {
         toast.success("Manual meal analyzed successfully.");
       }

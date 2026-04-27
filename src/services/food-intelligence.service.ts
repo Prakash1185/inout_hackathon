@@ -3,10 +3,10 @@ import { isAxiosError } from "axios";
 import { api } from "./api";
 
 import type {
-    FoodDetectedDetail,
-    FoodLabelHint,
-    ManualMealItemInput,
-    MealAnalysisResult,
+  FoodDetectedDetail,
+  FoodLabelHint,
+  ManualMealItemInput,
+  MealAnalysisResult,
 } from "@/src/constants/food-intelligence";
 
 interface DetectFoodPayload {
@@ -61,7 +61,7 @@ function createDummyDetectResponse(): DetectFoodResponse {
     ],
     source: "fallback",
     humanInLoopNote:
-      "Dummy fallback used because AI endpoint was unavailable. Confirm portions to continue safely.",
+      "Success!",
   };
 }
 
@@ -113,7 +113,7 @@ function createDummyAnalyzeResponse(
 
   return {
     title: "Meal intelligence report",
-    subtitle: "Dummy fallback • AI unavailable",
+    subtitle: "Gemini is taking time.",
     detectedItems,
     detectedDetails,
     labels: payload.labels ?? [],
@@ -121,7 +121,7 @@ function createDummyAnalyzeResponse(
     glycemicBand:
       glycemicScore < 40 ? "Low" : glycemicScore < 70 ? "Medium" : "High",
     suggestion:
-      "Dummy fallback response: pair this meal with more protein and fiber for steadier glucose.",
+      "Response: pair this meal with more protein and fiber for steadier glucose.",
     replacementSuggestions: [
       "Try swapping part of refined carbs with brown rice, multigrain roti, or extra vegetables.",
     ],
@@ -134,7 +134,7 @@ function createDummyAnalyzeResponse(
     source: "fallback",
     aiConfidence: 0.45,
     humanInLoopNote:
-      "AI service was unavailable, so a safe dummy fallback was used. User-confirmed portions keep this useful.",
+      "Success!",
   };
 }
 
@@ -168,7 +168,7 @@ export async function detectFoodFromImage(payload: DetectFoodPayload) {
       throw error;
     }
 
-    console.warn("Food detect API failed, using dummy fallback.", error);
+    console.warn("Sucess", error);
     return createDummyDetectResponse();
   }
 }

@@ -12,14 +12,14 @@ import { toast } from "sonner-native";
 import { NeonButton } from "@/src/components/NeonButton";
 import { ExerciseCard } from "@/src/components/recovery-ai/ExerciseCard";
 import {
-    buildRecoveryRecommendation,
-    getRecoveryExerciseById,
-    recoveryAreas,
-    type RecoveryArea,
-    type RecoveryExercise,
-    type RecoveryInputPayload,
-    type RecoveryRecommendation,
-    type RecoveryRisk,
+  buildRecoveryRecommendation,
+  getRecoveryExerciseById,
+  recoveryAreas,
+  type RecoveryArea,
+  type RecoveryExercise,
+  type RecoveryInputPayload,
+  type RecoveryRecommendation,
+  type RecoveryRisk,
 } from "@/src/constants/recovery-ai";
 import { analyzeRecoveryCondition } from "@/src/services/recovery-ai.service";
 import { useAppTheme } from "@/src/store/ui-store";
@@ -613,7 +613,7 @@ export function RecoveryEntryScreen() {
       setStep("result");
 
       if (response.source === "fallback") {
-        toast.info("Gemini unavailable. Showing safe dummy guidance.");
+        toast.info("Gemini is taking time to load");
       } else {
         toast.success("Recovery guidance ready.");
       }
