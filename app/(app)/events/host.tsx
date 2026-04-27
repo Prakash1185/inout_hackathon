@@ -56,8 +56,7 @@ export default function HostEventScreen() {
           style={{ borderColor: theme.border, backgroundColor: theme.surface }}
         >
           <Text className="text-sm" style={{ color: theme.textMuted }}>
-            Create a local event with dummy data. It will appear in upcoming
-            events.
+            Create a local event now.
           </Text>
 
           {[
